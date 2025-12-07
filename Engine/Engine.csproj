@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>Engine</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="Shaders\*.vs" />
+      <EmbeddedResource Include="Shaders\*.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Raylib-CSharp" Version="5.0.0" />
+    </ItemGroup>
+
+</Project>
