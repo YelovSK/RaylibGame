@@ -15,14 +15,14 @@ public class FullscreenShaderPass(string shaderName, Func<bool> enabledFunc) : I
     {
     }
 
-    private readonly Shader _shader = ResourceManager.Instance.LoadShader(null, shaderName);
+    protected readonly Shader Shader = ResourceManager.Instance.LoadShader(null, shaderName);
 
     public void Apply(Texture2D input, RenderTexture2D output)
     {
         Graphics.BeginTextureMode(output);
-        Graphics.BeginShaderMode(_shader);
+        Graphics.BeginShaderMode(Shader);
 
-        SetUniforms(_shader);
+        SetUniforms(Shader);
 
         Graphics.DrawTexturePro(
             input,
@@ -37,5 +37,13 @@ public class FullscreenShaderPass(string shaderName, Func<bool> enabledFunc) : I
         Graphics.EndTextureMode();
     }
 
+    /// <summary>
+    /// Set uniform values here.
+    /// </summary>
     protected virtual void SetUniforms(Shader shader) { }
+    
+    public void Dispose()
+    {
+        ResourceManager.Instance.UnloadShader(null, shaderName);
+    }
 }

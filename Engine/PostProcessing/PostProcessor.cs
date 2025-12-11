@@ -12,9 +12,14 @@ public class PostProcessor : IDisposable
     {
         _bufferA = RenderTexture2D.Load(width, height);
         _bufferB = RenderTexture2D.Load(width, height);
-
-        _bufferA.Texture.SetFilter(TextureFilter.Point);
-        _bufferB.Texture.SetFilter(TextureFilter.Point);
+    }
+    
+    public PostProcessor(int width, int height, IEnumerable<IPostProcessPass> passes, TextureFilter textureFilter) : this(width, height)
+    {
+        _passes = passes.ToList();
+        
+        _bufferA.Texture.SetFilter(textureFilter);
+        _bufferB.Texture.SetFilter(textureFilter);
     }
 
     public void AddPass(IPostProcessPass pass)

@@ -18,9 +18,6 @@ public abstract class Application
     /// Will be null if an instance wasn't created with the constructor.
     /// </summary>
     public static Application Instance { get; private set; }
-    
-    protected PostProcessor PostProcessor { get; private set; }
-    protected RenderTexture2D RenderTarget { get; private set; }
 
     public int VirtualWidth { get; private set; }
     public int VirtualHeight  { get; private set; }
@@ -34,6 +31,12 @@ public abstract class Application
     
     public double UpdateTimeMs  { get; private set; }
     public double DrawTimeMs  { get; private set; }
+    
+    private RenderTexture2D _virtualRenderTarget;
+    private RenderTexture2D _renderTarget;
+    
+    private PostProcessor _virtualPostProcessor;
+    private PostProcessor _postProcessor;
 
     protected Application(int virtualWidth, int virtualHeight, string title)
     {
@@ -52,10 +55,114 @@ public abstract class Application
     protected abstract void OnExit();
     /// <returns>Return true to throw exception, and false to continue.</returns>
     protected virtual bool OnException(Exception exception) => true;
-    protected virtual IEnumerable<IPostProcessPass> InitializeShaders() => [];
+    /// <summary>
+    /// Shaders get applied to the low res render texture with virtual resolution.
+    /// </summary>
+    protected virtual IEnumerable<IPostProcessPass> GetVirtualShaders() => [];
+    /// <summary>
+    /// Shaders get applied to the final high resolution texture.
+    /// </summary>
+    protected virtual IEnumerable<IPostProcessPass> GetShaders() => [];
 
-    protected virtual void DrawFinalFrame(Texture2D finalTexture)
+    public void Run()
     {
+        AppDomain.CurrentDomain.ProcessExit += (_, _) =>
+        {
+            OnExit();
+        }; 
+        
+        BeforeWindowInit();
+
+        Window.Init(Window.GetScreenWidth(), Window.GetScreenHeight(), Title);
+        
+        _virtualRenderTarget  = RenderTexture2D.Load(VirtualWidth, VirtualHeight);
+        _virtualRenderTarget.Texture.SetFilter(TextureFilter.Point);
+        
+        _renderTarget = RenderTexture2D.Load(Window.GetScreenWidth(), Window.GetScreenHeight());
+        _renderTarget.Texture.SetFilter(TextureFilter.Bilinear);
+        
+        _virtualPostProcessor = new PostProcessor(VirtualWidth, VirtualHeight, GetVirtualShaders(), TextureFilter.Point);
+        _postProcessor = new PostProcessor(Window.GetScreenWidth(), Window.GetScreenHeight(), GetShaders(), TextureFilter.Bilinear);
+        
+        AfterWindowInit();
+
+        while (!Window.ShouldClose() && !_closeRequested)
+        {
+            try
+            {
+                if (Window.IsResized())
+                {
+                    OnWindowResized();
+                }
+                
+                var dt = Time.GetFrameTime();
+
+                // Update
+                var updateStart = Time.GetTime();
+                InputBuffer.Instance.Gather();
+                Update(dt);
+                var updateEnd = Time.GetTime();
+                UpdateTimeMs = (updateEnd - updateStart) * 1000;
+
+                // Draw in virtual resolution
+                var drawStart = Time.GetTime();
+                Graphics.BeginTextureMode(_virtualRenderTarget);
+                Draw();
+                Graphics.EndTextureMode();
+
+                // Apply shaders to low res texture
+                var virtualRenderTargetPp = _virtualPostProcessor.Apply(_virtualRenderTarget.Texture);
+                
+                // Scale virtual res texture up
+                Graphics.BeginTextureMode(_renderTarget);
+                BlitToScreen(virtualRenderTargetPp);
+                Graphics.EndTextureMode();
+                
+                // Apply shaders to full res texture
+                var renderTargetPp = _postProcessor.Apply(_renderTarget.Texture); 
+                
+                Graphics.BeginDrawing();
+                Graphics.ClearBackground(Color.Black);
+                Graphics.DrawTexturePro(
+                    renderTargetPp,
+                    new Rectangle(0, 0, Window.GetScreenWidth(), -Window.GetScreenHeight()),
+                    new Rectangle(0, 0, Window.GetScreenWidth(), Window.GetScreenHeight()),
+                    Vector2.Zero,
+                    0.0f,
+                    Color.White
+                );
+                Graphics.EndDrawing(); 
+
+                // Scale up
+                var drawEnd  = Time.GetTime();
+                DrawTimeMs = (drawEnd - drawStart) * 1000;
+            }
+            catch (Exception e)
+            {
+                if (OnException(e)) throw;
+            }
+        }
+        
+        // Cleanup
+        _renderTarget.Unload();
+        _virtualRenderTarget.Unload();
+        Window.Close();
+    }
+
+    private void OnWindowResized()
+    {
+        _renderTarget.Unload();
+        _renderTarget = RenderTexture2D.Load(Window.GetScreenWidth(), Window.GetScreenHeight());
+        _renderTarget.Texture.SetFilter(TextureFilter.Bilinear);
+        
+        _postProcessor.Dispose();
+        _postProcessor = new PostProcessor(Window.GetScreenWidth(), Window.GetScreenHeight(), GetShaders(), TextureFilter.Bilinear);
+    }
+    
+    private void BlitToScreen(Texture2D finalTexture)
+    {
+        Graphics.ClearBackground(Color.Black);
+        
         var screenWidth = Window.GetScreenWidth();
         var screenHeight = Window.GetScreenHeight();
         
@@ -69,68 +176,5 @@ public abstract class Application
         Rectangle source = new(0, 0, VirtualWidth, -VirtualHeight);
 
         Graphics.DrawTexturePro(finalTexture, source, dest, Vector2.Zero, 0.0f, Color.White);
-    }
-    
-    public void Run()
-    {
-        AppDomain.CurrentDomain.ProcessExit += (_, _) =>
-        {
-            OnExit();
-        }; 
-        
-        BeforeWindowInit();
-
-        Window.Init(Window.GetScreenWidth(), Window.GetScreenHeight(), Title);
-        
-        RenderTarget = RenderTexture2D.Load(VirtualWidth, VirtualHeight);
-        RenderTarget.Texture.SetFilter(TextureFilter.Point);
-        
-        PostProcessor = new PostProcessor(VirtualWidth, VirtualHeight);
-        foreach (var pass in InitializeShaders())
-        {
-            PostProcessor.AddPass(pass);
-        }
-        
-        AfterWindowInit();
-
-        while (!Window.ShouldClose() && !_closeRequested)
-        {
-            try
-            {
-                var dt = Time.GetFrameTime();
-
-                // Update
-                var updateStart = Time.GetTime();
-                InputBuffer.Instance.Gather();
-                Update(dt);
-                var updateEnd = Time.GetTime();
-                UpdateTimeMs = (updateEnd - updateStart) * 1000;
-
-                // Draw
-                var drawStart = Time.GetTime();
-                Graphics.BeginTextureMode(RenderTarget);
-                Draw();
-                Graphics.EndTextureMode();
-
-                // Post-process
-                var postProcessedTexture = PostProcessor.Apply(RenderTarget.Texture);
-
-                // Scale up
-                Graphics.BeginDrawing();
-                Graphics.ClearBackground(Color.Black);
-                DrawFinalFrame(postProcessedTexture);
-                Graphics.EndDrawing();
-                var drawEnd  = Time.GetTime();
-                DrawTimeMs = (drawEnd - drawStart) * 1000;
-            }
-            catch (Exception e)
-            {
-                if (OnException(e)) throw;
-            }
-        }
-        
-        // Cleanup
-        RenderTarget.Unload();
-        Window.Close();
     }
 }

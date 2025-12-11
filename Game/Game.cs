@@ -1,12 +1,12 @@
 using Engine;
 using Engine.PostProcessing;
 using Game.Persistence;
+using Game.PostProcessing;
 using Game.Scenes;
 using Raylib_CSharp;
 using Raylib_CSharp.Colors;
 using Raylib_CSharp.Interact;
 using Raylib_CSharp.Rendering;
-using Raylib_CSharp.Textures;
 using Raylib_CSharp.Windowing;
 
 namespace Game;
@@ -54,15 +54,6 @@ public class Game() : Application(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, TITLE)
         SceneManager.Instance.Draw();
     }
 
-    protected override void DrawFinalFrame(Texture2D finalTexture)
-    {
-        base.DrawFinalFrame(finalTexture);
-
-        if (Settings.Instance.ShowFps)
-        {
-            Graphics.DrawFPS(0, 0);
-        }
-    }
 
     protected override void OnExit()
     {
@@ -76,12 +67,21 @@ public class Game() : Application(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, TITLE)
         return true;
     }
 
-    protected override IEnumerable<IPostProcessPass> InitializeShaders()
+    protected override IEnumerable<IPostProcessPass> GetVirtualShaders()
     {
         return
         [
-            new FullscreenShaderPass("bloom.fs", () => Settings.Instance.EnableShaders),
+        ];
+    }
+
+    protected override IEnumerable<IPostProcessPass> GetShaders()
+    {
+        return
+        [
             new FullscreenShaderPass("crt.fs", () => Settings.Instance.EnableShaders),
+            new FullscreenShaderPass("bloom.fs", () => Settings.Instance.EnableShaders),
+            new GrainPass(),
+            new FullscreenShaderPass("aces.fs", () => Settings.Instance.EnableShaders),
         ];
     }
 }
