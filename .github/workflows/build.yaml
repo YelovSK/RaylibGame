@@ -25,11 +25,9 @@ jobs:
       - name: Publish
         run: dotnet publish Game -c Release -r win-x64 -p:PublishAot=true --self-contained true -p:DebugSymbols=false
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: game-build
-          path: Game/bin/Release/net10.0/win-x64/publish/
+      - name: Zip build
+        run: |
+          powershell -Command "Compress-Archive -Path 'Game/bin/Release/net10.0/win-x64/publish/*' -DestinationPath 'game-build.zip'"
 
       - name: Create release
         uses: softprops/action-gh-release@v2
@@ -39,6 +37,6 @@ jobs:
           name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false
-          files: Game/bin/Release/net10.0/win-x64/publish/**
+          files: "game-build.zip"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
