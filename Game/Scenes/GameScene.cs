@@ -19,7 +19,7 @@ public class GameScene : Scene
     public override void Load()
     {
         // Create player
-        _player = new Entity();
+        _player = new Entity(this);
         _player.Transform.Position = new Vector2(10, 10);
         _player.AddComponent(new SpriteComponent
         {
@@ -32,7 +32,6 @@ public class GameScene : Scene
             Bounds = new(_player.Transform.Position.X, _player.Transform.Position.Y, PLAYER_SIZE, PLAYER_SIZE)
         });
         _playerController = _player.AddComponent(new PlayerController());
-        AddEntity(_player);
 
         // Create ground
         CreatePlatform(10, Application.Instance.VirtualHeight - 20, 600, 10);
@@ -42,15 +41,14 @@ public class GameScene : Scene
         CreatePlatform(100, Application.Instance.VirtualHeight - 250, 200, 10);
         CreatePlatform(200, Application.Instance.VirtualHeight - 160, 200, 10);
         
-        var camera = new Entity();
+        var camera = new Entity(this);
         var cameraComponent = camera.AddComponent(new CameraComponent());
         cameraComponent.Target = _player;
-        AddEntity(camera);
     }
 
     private void CreatePlatform(int x, int y, int width, int height)
     {
-        var platform = new Entity(new Vector2(x, y));
+        var platform = new Entity(this, new Vector2(x, y));
         platform.AddComponent(new SpriteComponent
         {
             Width = width,
@@ -61,7 +59,6 @@ public class GameScene : Scene
         {
             Bounds = new(platform.Transform.Position.X, platform.Transform.Position.Y, width, height)
         });
-        AddEntity(platform);
         _platforms.Add(platform);
     }
 

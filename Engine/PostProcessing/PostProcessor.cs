@@ -2,7 +2,7 @@
 
 namespace Engine.PostProcessing;
 
-public class PostProcessor
+public class PostProcessor : IDisposable
 {
     private readonly List<IPostProcessPass> _passes = [];
     private readonly RenderTexture2D _bufferA;
@@ -42,5 +42,11 @@ public class PostProcessor
         }
 
         return sourceTex; 
+    }
+    
+    public void Dispose()
+    {
+        _bufferA.Unload();
+        _bufferB.Unload();
     }
 }

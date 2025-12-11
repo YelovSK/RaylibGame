@@ -4,11 +4,11 @@ using Raylib_CSharp.Transformations;
 
 namespace Engine.Components;
 
-public class BoxColliderComponent : Component
+public class BoxColliderComponent : Component, IUpdatable
 {
     public Rectangle Bounds;
 
-    public override void Update(float dt)
+    public void Update(float dt)
     {
         // Keep bounds in sync with position
         Bounds.X = Entity.Transform.Position.X;
@@ -16,7 +16,7 @@ public class BoxColliderComponent : Component
     }
     
     #if DEBUG
-    public override void Draw()
+    public void Draw()
     {
         return;
         var color = Color.Red;

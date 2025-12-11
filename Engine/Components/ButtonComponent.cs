@@ -1,4 +1,5 @@
 using System.Numerics;
+using Engine.Enums;
 using Engine.Extensions;
 using Raylib_CSharp;
 using Raylib_CSharp.Collision;
@@ -10,8 +11,10 @@ using Raylib_CSharp.Transformations;
 
 namespace Engine.Components;
 
-public class ButtonComponent : Component
+public class ButtonComponent : Component, IUpdatable, IDrawable
 {
+    public RenderSpace RenderSpace { get; set; } = RenderSpace.Screen;
+    
     public required string Text;
     public int FontSize = 20;
     public Vector2 Size;
@@ -33,7 +36,7 @@ public class ButtonComponent : Component
     private const float TILT_SPEED = 10f;
     private const float FOV = 100f;
 
-    public override void Update(float dt)
+    public void Update(float dt)
     {
         var mousePos = Input.GetVirtualMousePosition();
         var bounds = new Rectangle(
@@ -88,8 +91,8 @@ public class ButtonComponent : Component
         _currentTiltX = RayMath.Lerp(_currentTiltX, targetTiltX, TILT_SPEED * dt);
         _currentTiltY = RayMath.Lerp(_currentTiltY, targetTiltY, TILT_SPEED * dt);
     }
-
-    public override void Draw()
+    
+    public void Draw()
     {
         var color = GetBackgroundColor();
         

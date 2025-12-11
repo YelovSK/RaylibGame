@@ -9,7 +9,7 @@ using Raylib_CSharp.Interact;
 
 namespace Game.Components;
 
-public class PlayerController : Component
+public class PlayerController : Component, IUpdatable
 {
     // Helper cheats
     public const float COTOYE_TIME = 0.2f;
@@ -52,7 +52,7 @@ public class PlayerController : Component
         _collider = Entity.GetComponent<BoxColliderComponent>()!;
     }
 
-    public override void Update(float dt)
+    public void Update(float dt)
     {
         CheckCollisions();
 

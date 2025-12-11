@@ -58,24 +58,22 @@ public class OptionsScene : Scene
         var middle = VirtualLayout.Center(0, 0);
         middle.Y += SETTING_OFFSET * _settingsCount;
         
-        var textGo = new Entity(middle);
+        var textGo = new Entity(this, middle);
         var textComponent = textGo.AddComponent(new TextComponent()
         {
             Text = text,
-            RenderSpace = RenderSpace.Screen
+            //RenderSpace = RenderSpace.Screen
         });
         textGo.Transform.Position -= Vector2.X(textComponent.TextSize() + SETTING_HEIGHT * 0.7f);
-        AddEntity(textGo);
         
-        var go = new Entity(middle);
+        var go = new Entity(this, middle);
         _ = go.AddComponent(new CheckboxComponent()
         {
             IsChecked = defaultValue,
             OnClick = setter,
             Size = SETTING_HEIGHT,
-            RenderSpace = RenderSpace.Screen
+            //RenderSpace = RenderSpace.Screen
         });
-        AddEntity(go);
         _settingsCount++;
     }
 

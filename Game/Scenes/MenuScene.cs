@@ -41,7 +41,7 @@ public class MenuScene : Scene
     {
         var middle = VirtualLayout.Center(BUTTON_WIDTH, 0);
         
-        var buttonObject = new Entity(new Vector2(middle.X, y));
+        var buttonObject = new Entity(this, new Vector2(middle.X, y));
         var button = new ButtonComponent
         {
             Text = text,
@@ -50,7 +50,6 @@ public class MenuScene : Scene
             RenderSpace = RenderSpace.Screen
         };
         buttonObject.AddComponent(button);
-        AddEntity(buttonObject);
         return button;
     }
 }

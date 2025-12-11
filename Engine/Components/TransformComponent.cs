@@ -1,35 +1,17 @@
-using System.Collections.ObjectModel;
 using System.Numerics;
 
 namespace Engine.Components;
 
 public class TransformComponent : Component
 {
-    public TransformComponent? Parent
-    {
-        get;
-        set
-        {
-            if (field == value || value == this)
-            {
-                return;
-            }
-
-            field?._children.Remove(this);
-            field = value;
-            field?._children.Add(this);
-            
-            SetDirty();
-        }
-    }
-    
-    protected readonly List<TransformComponent> _children = [];
-    public ReadOnlyCollection<TransformComponent> Children => _children.AsReadOnly();
+    private readonly List<TransformComponent> _children = [];
+    public ReadOnlyList<TransformComponent> Children => new(_children);
 
     // Cache
     private Matrix4x4 _worldMatrix;
     private bool _isDirty = true;
 
+    // Local
     public Vector2 LocalPosition
     {
         get;
@@ -47,10 +29,31 @@ public class TransformComponent : Component
         get;
         set { field = value; SetDirty(); }
     }
+    
+    // World
+    public TransformComponent? Parent
+    {
+        get;
+        set
+        {
+            if (field == value || value == this)
+            {
+                return;
+            }
+
+            field?._children.Remove(this);
+            field = value;
+            field?._children.Add(this);
+            
+            SetDirty();
+        }
+    }
 
     public Vector2 Position
     {
-        get => GetWorldMatrix().Translation.AsVector2();
+        get => Parent != null
+            ? GetWorldMatrix().Translation.AsVector2()
+            : LocalPosition;
         set
         {
             if (Parent != null)
@@ -66,7 +69,7 @@ public class TransformComponent : Component
             }
         }
     }
-    
+
     public float Rotation
     {
         get => Parent != null
@@ -137,5 +140,4 @@ public class TransformComponent : Component
             child.SetDirty();
         }
     }
-
 }

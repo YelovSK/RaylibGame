@@ -2,9 +2,6 @@ namespace Engine;
 
 public class SceneManager : Singleton<SceneManager>
 {
-    private const float FIXED_DELTA_TIME = 1f / 60f;
-    private float _accumulator = 0f;
-
     public Scene? Current
     {
         get
@@ -57,12 +54,6 @@ public class SceneManager : Singleton<SceneManager>
     public void Update(float dt)
     {
         Current?.Update(dt);
-        
-        _accumulator += dt;
-        if (_accumulator >= FIXED_DELTA_TIME) {
-            Current?.FixedUpdate();
-            _accumulator = 0f;
-        }
     }
 
     public void Draw()

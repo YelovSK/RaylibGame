@@ -12,14 +12,20 @@ public abstract class Scene
     private readonly List<Entity> _entities = [];
     private readonly List<CameraComponent> _cameras = [];
     
+    // Is around 50% faster when scene has a bunch of components.
+    // Have to somehow keep it up to date which is annoying.
+    // Plus there is a bigger overhead when adding/removing components.
+    private readonly List<IUpdatable> _updatables = [];
+    private readonly List<IDrawable> _screenDrawables = [];
+    private readonly List<IDrawable> _worldDrawables = [];
+    
     // Camera components register themselves.
+    // Right now, only a single camera is used.
     public CameraComponent? Camera => _cameras.FirstOrDefault();
 
-    public virtual void Load()
-    {
-    }
+    public abstract void Load();
 
-    public virtual void Start()
+    public void Start()
     {
         foreach (var entity in _entities)
         {
@@ -30,79 +36,34 @@ public abstract class Scene
         }
     }
 
-    public void AddEntity(Entity obj)
+    public void RegisterEntity(Entity entity)
     {
-        obj.Scene = this;
-        _entities.Add(obj);
+        _entities.Add(entity);
     }
 
-    public void RemoveEntity(Entity obj)
+    public void RemoveEntity(Entity entity)
     {
-        foreach (var component in obj.Components)
+        foreach (var component in entity.Components)
         {
+            UnregisterComponent(component);
             component.OnDestroy();
         }
 
-        _entities.Remove(obj);
+        _entities.Remove(entity);
     }
 
     public virtual void Update(float dt)
     {
-        foreach (var entity in _entities)
+        foreach (var update in _updatables)
         {
-            foreach (var component in entity.Components)
-            {
-                component.Update(dt);
-            }
-        }
-    }
-    
-    public virtual void FixedUpdate()
-    {
-        foreach (var entity in _entities)
-        {
-            foreach (var component in entity.Components)
-            {
-                component.FixedUpdate();
-            }
+            update.Update(dt);
         }
     }
 
-    public virtual void Draw()
+    public void Draw()
     {
-        if (Camera != null)
-        {
-            Graphics.BeginMode2D(Camera.Camera);
-        }
-        
-        // World space
-        foreach (var entity in _entities)
-        {
-            foreach (var component in entity.Components)
-            {
-                if (component.RenderSpace == RenderSpace.World)
-                {
-                    component.Draw();
-                }
-            }
-        }
-        
-        if (Camera != null)
-        {
-            Graphics.EndMode2D();
-        }
-        
-        // Screen space
-        foreach (var entity in _entities)
-        {
-            foreach (var component in entity.Components)
-            {
-                if (component.RenderSpace == RenderSpace.Screen)
-                {
-                    component.Draw();
-                }
-            }
-        }
+        DrawWorldSpace();
+        DrawScreenSpace();
     }
     
     public virtual void OnDestroy()
@@ -116,6 +77,48 @@ public abstract class Scene
         }
     }
 
+    public void RegisterComponent<T>(T component) where T : Component
+    {
+        if (component is IUpdatable updateable)
+        {
+            _updatables.Add(updateable);
+        }
+        
+        if (component is IDrawable drawable)
+        {
+            switch (drawable.RenderSpace)
+            {
+                case RenderSpace.Screen:
+                    _screenDrawables.Add(drawable);
+                    break;
+                case RenderSpace.World:
+                    _worldDrawables.Add(drawable);
+                    break;
+            }
+        }
+    }
+    
+    public void UnregisterComponent<T>(T component) where T : Component
+    {
+        if (component is IUpdatable updateable)
+        {
+            _updatables.Remove(updateable);
+        }
+        
+        if (component is IDrawable drawable)
+        {
+            switch (drawable.RenderSpace)
+            {
+                case RenderSpace.Screen:
+                    _screenDrawables.Remove(drawable);
+                    break;
+                case RenderSpace.World:
+                    _worldDrawables.Remove(drawable);
+                    break;
+            }
+        }
+    }
+    
     public void RegisterCamera(CameraComponent camera)
     {
         _cameras.Add(camera);
@@ -124,5 +127,31 @@ public abstract class Scene
     public void UnregisterCamera(CameraComponent camera)
     {
         _cameras.Remove(camera);
+    }
+    
+    private void DrawWorldSpace()
+    {
+        if (Camera != null)
+        {
+            Graphics.BeginMode2D(Camera.Camera);
+        }
+        
+        foreach (var draw in _worldDrawables)
+        {
+            draw.Draw();
+        }
+        
+        if (Camera != null)
+        {
+            Graphics.EndMode2D();
+        }
+    }
+
+    private void DrawScreenSpace()
+    {
+        foreach (var draw in _screenDrawables)
+        {
+            draw.Draw();
+        }
     }
 }

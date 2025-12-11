@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using Engine.Enums;
 using Engine.Extensions;
 using Raylib_CSharp.Collision;
 using Raylib_CSharp.Colors;
@@ -8,8 +9,10 @@ using Raylib_CSharp.Transformations;
 
 namespace Engine.Components;
 
-public class CheckboxComponent : Component
+public class CheckboxComponent : Component, IUpdatable, IDrawable
 {
+    public RenderSpace RenderSpace { get; set; } = RenderSpace.Screen;
+    
     public bool IsChecked { get; set; }
     public Action<bool>? OnClick;
     
@@ -23,7 +26,7 @@ public class CheckboxComponent : Component
     private bool _isPressed;
     private bool _wasPressed;
 
-    public override void Update(float dt)
+    public  void Update(float dt)
     {
         var mousePos = Input.GetVirtualMousePosition();
         var bounds = new Rectangle(
@@ -52,7 +55,7 @@ public class CheckboxComponent : Component
         }
     }
 
-    public override void Draw()
+    public  void Draw()
     {
         var pos = Entity.Transform.Position;
 
