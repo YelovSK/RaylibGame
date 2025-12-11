@@ -13,11 +13,5 @@ public static class ExtensionsGraphics
             Graphics.DrawTriangle(topLeft, bottomRight, topRight, color);
             Graphics.DrawTriangle(bottomRight, topLeft, bottomLeft, color);
         }
-        
-        public static void DrawQuadLines(Vector2 topLeft, Vector2 topRight, Vector2 bottomLeft, Vector2 bottomRight, Color color)
-        {
-            Graphics.DrawTriangleLines(topLeft, bottomRight, topRight, color);
-            Graphics.DrawTriangleLines(bottomRight, topLeft, bottomLeft, color);
-        }
     }
 }

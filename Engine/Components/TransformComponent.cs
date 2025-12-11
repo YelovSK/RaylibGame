@@ -1,10 +1,141 @@
+using System.Collections.ObjectModel;
 using System.Numerics;
 
 namespace Engine.Components;
 
 public class TransformComponent : Component
 {
-    public Vector2 Position;
-    public float Rotation;
-    public Vector2 Scale = new(1, 1);
+    public TransformComponent? Parent
+    {
+        get;
+        set
+        {
+            if (field == value || value == this)
+            {
+                return;
+            }
+
+            field?._children.Remove(this);
+            field = value;
+            field?._children.Add(this);
+            
+            SetDirty();
+        }
+    }
+    
+    protected readonly List<TransformComponent> _children = [];
+    public ReadOnlyCollection<TransformComponent> Children => _children.AsReadOnly();
+
+    // Cache
+    private Matrix4x4 _worldMatrix;
+    private bool _isDirty = true;
+
+    public Vector2 LocalPosition
+    {
+        get;
+        set { field = value; SetDirty(); }
+    }
+
+    public float LocalRotation
+    {
+        get;
+        set { field = value; SetDirty(); }
+    }
+
+    public Vector2 LocalScale
+    {
+        get;
+        set { field = value; SetDirty(); }
+    }
+
+    public Vector2 Position
+    {
+        get => GetWorldMatrix().Translation.AsVector2();
+        set
+        {
+            if (Parent != null)
+            {
+                var parentMatrix = Parent.GetWorldMatrix();
+                Matrix4x4.Invert(parentMatrix, out var parentInverse);
+
+                LocalPosition = Vector2.Transform(value, parentInverse);
+            }
+            else
+            {
+                LocalPosition = value;
+            }
+        }
+    }
+    
+    public float Rotation
+    {
+        get => Parent != null
+            ? Parent.Rotation + LocalRotation
+            : LocalRotation;
+        set
+        {
+            if (Parent != null)
+            {
+                LocalRotation = value - Parent.Rotation;
+            }
+            else
+            {
+                LocalRotation = value;
+            }
+        }
+    }
+    
+    public Vector2 Scale
+    {
+        get => Parent != null
+            ? Parent.Scale * LocalScale
+            : LocalScale;
+        set
+        {
+            if (Parent != null)
+            {
+                var parentScale = Parent.Scale;
+                var x = parentScale.X == 0
+                    ? 0
+                    : value.X / parentScale.X;
+                var y = parentScale.Y == 0
+                    ? 0
+                    : value.Y / parentScale.Y;
+                LocalScale = new Vector2(x, y);
+            }
+            else
+            {
+                LocalScale = value;
+            }
+        }
+    }
+    
+    public Matrix4x4 GetWorldMatrix()
+    {
+        if (!_isDirty)
+        {
+            return _worldMatrix;
+        }
+        
+        var localMat = Matrix4x4.CreateScale(new Vector3(LocalScale.X, LocalScale.Y, 1)) *
+                                Matrix4x4.CreateRotationZ(LocalRotation) *
+                                Matrix4x4.CreateTranslation(LocalPosition.AsVector3());
+
+        _worldMatrix = Parent != null
+            ? localMat * Parent.GetWorldMatrix()
+            : localMat;
+
+        _isDirty = false;
+        return _worldMatrix;
+    }
+    
+    private void SetDirty()
+    {
+        _isDirty = true;
+        foreach (var child in _children)
+        {
+            child.SetDirty();
+        }
+    }
+
 }

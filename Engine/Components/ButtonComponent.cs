@@ -1,6 +1,5 @@
 using System.Numerics;
 using Engine.Extensions;
-using Engine.Helpers;
 using Raylib_CSharp;
 using Raylib_CSharp.Collision;
 using Raylib_CSharp.Colors;
@@ -16,11 +15,12 @@ public class ButtonComponent : Component
     public required string Text;
     public int FontSize = 20;
     public Vector2 Size;
+    public float StrokeWidth = 2f;
     public Color NormalColor = Color.DarkGray;
     public Color HoverColor = Color.Gray;
     public Color PressedColor = Color.LightGray;
     public Color TextColor = Color.White;
-
+    
     public Action? OnClick;
 
     private bool _isHovered;
@@ -31,13 +31,11 @@ public class ButtonComponent : Component
     
     private const float MAX_TILT_DEGREES = 15f;
     private const float TILT_SPEED = 10f;
-    private const float STROKE_WIDTH = Layout.VIRTUAL_WIDTH * 0.005f;
-    private const float TILT_MIN_DISTANCE = Layout.VIRTUAL_WIDTH * 0.2f;
     private const float FOV = 100f;
 
     public override void Update(float dt)
     {
-        var mousePos = Layout.GetMousePosition();
+        var mousePos = Input.GetVirtualMousePosition();
         var bounds = new Rectangle(
             Entity.Transform.Position.X,
             Entity.Transform.Position.Y,
@@ -73,7 +71,7 @@ public class ButtonComponent : Component
         float targetTiltX;
         float targetTiltY;
         
-        if (offset.Length() > TILT_MIN_DISTANCE)
+        if (!_isHovered)
         {
             targetTiltX = 0;
             targetTiltY = 0;
@@ -96,13 +94,13 @@ public class ButtonComponent : Component
         var color = GetBackgroundColor();
         
         // Tilt the button in 3D space and project it into 2D
-        var corners = new Vector3[]
-        {
+        Span<Vector3> corners =
+        [
             new(-Size.X/2, -Size.Y/2, 0),
             new( Size.X/2, -Size.Y/2, 0),
             new(-Size.X/2,  Size.Y/2, 0),
             new( Size.X/2,  Size.Y/2, 0),
-        };
+        ];
         
         var tiltXRad = _currentTiltX * RayMath.Deg2Rad;
         var tiltYRad = _currentTiltY * RayMath.Deg2Rad;
@@ -123,7 +121,8 @@ public class ButtonComponent : Component
 
         var center = Entity.Transform.Position + (Size / 2);
         
-        var projected = new Vector2[4];
+        // TODO: i think this could be a helper
+        Span<Vector2> projected = stackalloc Vector2[4];
         for (var i = 0; i < corners.Length; i++)
         {
             var scale = FOV / (FOV + corners[i].Z);
@@ -138,7 +137,7 @@ public class ButtonComponent : Component
         
         // Outline
         Span<Vector2> outlinesPoints = [ projected[0], projected[1], projected[3], projected[2], projected[0] ];
-        Graphics.DrawSplineLinear(outlinesPoints, STROKE_WIDTH, Color.Black);
+        Graphics.DrawSplineLinear(outlinesPoints, StrokeWidth, Color.Black);
 
         // Text
         var textSize = TextManager.MeasureText(Text, FontSize);
@@ -151,7 +150,7 @@ public class ButtonComponent : Component
         if (_isHovered)
         {
             var sin = Math.Sin(2 * Math.PI * Time.GetTime());
-            textPos.Y += (float)(sin * Layout.VIRTUAL_HEIGHT * 0.01f);
+            textPos.Y += (float)(sin * Application.Instance.VirtualHeight * 0.01f);
         }
         
         Graphics.DrawText(Text, (int)textPos.X, (int)textPos.Y, FontSize, TextColor);

@@ -1,7 +1,7 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Engine;
 using Engine.Components;
-using Engine.Helpers;
+using Engine.Extensions;
 using Game.Persistence;
 using Raylib_CSharp;
 using Raylib_CSharp.Collision;
@@ -13,20 +13,19 @@ public class PlayerController : Component
 {
     // Helper cheats
     public const float COTOYE_TIME = 0.2f;
-    public const float CEILING_BUMP_MAX_PX = Layout.VIRTUAL_WIDTH * 0.01f;
+    public readonly float CEILING_BUMP_MAX_PX = Application.Instance.VirtualWidth * 0.01f;
     public const float JUMP_BUFFER_TIME = 0.1f;
-    
+
     public const float MAX_HORIZONTAL_SPEED = 300f;
     public const float HORIZONTAL_ACCELERATION = 5000f;
     public const float JUMP_ACCELERATION = 500f;
     public const float FRICTION = 20f;
     public const float AIR_FRICTION = 2f;
     public const float GRAVITY = 1500f;
-    
-    
+
     public const float JUMP_HOLD_FORCE = 2000f;
     public const float MAX_JUMP_HOLD_TIME = 0.2f;
-    
+
     public const float DASH_SPEED = 700f;
     public const float DASH_LENGTH = 0.15f;
 
@@ -39,14 +38,13 @@ public class PlayerController : Component
     private int _jumpCount = 0;
     private int _dashesCount = 0;
 
-    private readonly Stack<KeyboardKey> _inputBuffer = [];
-
-    private List<BoxColliderComponent?> _sceneColliders;
+    private List<BoxColliderComponent?> _sceneColliders = [];
     private BoxColliderComponent _collider;
 
     public override void Start()
     {
         _sceneColliders = Entity.Scene.Entities
+            .AsEnumerable()
             .Where(go => go != Entity)
             .Select(go => go.GetComponent<BoxColliderComponent>())
             .Where(col => col != null)
@@ -91,7 +89,7 @@ public class PlayerController : Component
             }
             return;
         }
-        
+
         if (!Input.IsKeyPressed(Settings.Instance.DashKey))
         {
             return;
@@ -162,7 +160,7 @@ public class PlayerController : Component
         {
             return;
         }
-    
+
         _consumed = false;
         if (_canHyperDashUntil > Time.GetTime())
         {
@@ -181,11 +179,11 @@ public class PlayerController : Component
     {
         var hitGround = false;
         var hitCeiling = false;
-        
+
         foreach (var collider in _sceneColliders)
         {
             var overlap = ShapeHelper.GetCollisionRec(collider.Bounds, _collider.Bounds);
-            
+
             if (overlap.Width == 0 || overlap.Height == 0)
             {
                 continue;
@@ -194,16 +192,15 @@ public class PlayerController : Component
             var dirX = _collider.Bounds.X < collider.Bounds.X
                 ? -1
                 : 1;
-            
+
             var dirY = _collider.Bounds.Y < collider.Bounds.Y
                 ? -1
                 : 1;
-            
+
             // Horizontal collision
             if (overlap.Width < overlap.Height)
             {
-                
-                Entity.Transform.Position.X += overlap.Width * dirX;
+                Entity.Transform.Position += Vector2.X(overlap.Width * dirX);
                 Velocity.X = 0;
             }
             // Vertical collision
@@ -214,11 +211,11 @@ public class PlayerController : Component
 
                 if (hitCeiling && overlap.Width < CEILING_BUMP_MAX_PX)
                 {
-                    Entity.Transform.Position.X += overlap.Width * dirX;
+                    Entity.Transform.Position += Vector2.X(overlap.Width * dirX);
                     break;
                 }
-                
-                Entity.Transform.Position.Y += overlap.Height * dirY;
+
+                Entity.Transform.Position += Vector2.Y(overlap.Height * dirY);
                 Velocity.Y = 0;
             }
 
@@ -240,7 +237,7 @@ public class PlayerController : Component
                 _canHyperDashUntil = Time.GetTime() + 0.2f;
             }
         }
-        
+
         _isGrounded = hitGround;
     }
 
@@ -250,7 +247,7 @@ public class PlayerController : Component
     private Vector2 InputDirection()
     {
         var direction = new Vector2();
-        
+
         if (Input.IsKeyDown(KeyboardKey.Up))
         {
             direction.Y -= 1;

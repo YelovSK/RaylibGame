@@ -1,5 +1,8 @@
-﻿using Engine;
+﻿using System.Numerics;
+using Engine;
 using Engine.Components;
+using Engine.Enums;
+using Engine.Extensions;
 using Engine.Helpers;
 using Game.Persistence;
 using Raylib_CSharp.Interact;
@@ -9,8 +12,8 @@ namespace Game.Scenes;
 
 public class OptionsScene : Scene
 {
-    private const float SETTING_HEIGHT = Layout.VIRTUAL_HEIGHT * 0.05f;
-    private const float SETTING_OFFSET = SETTING_HEIGHT * 1.5f;
+    private readonly float SETTING_HEIGHT = Application.Instance.VirtualHeight * 0.05f;
+    private float SETTING_OFFSET => SETTING_HEIGHT * 1.5f;
 
     private int _settingsCount;
     
@@ -52,23 +55,25 @@ public class OptionsScene : Scene
 
     private void AddSetting(string text, bool defaultValue, Action<bool> setter)
     {
-        var middle = Layout.Center(0, 0);
+        var middle = VirtualLayout.Center(0, 0);
         middle.Y += SETTING_OFFSET * _settingsCount;
         
-        var textGo = new Entity(this, middle);
+        var textGo = new Entity(middle);
         var textComponent = textGo.AddComponent(new TextComponent()
         {
             Text = text,
+            RenderSpace = RenderSpace.Screen
         });
-        textGo.Transform.Position.X -= textComponent.TextSize() + SETTING_HEIGHT * 0.7f;
+        textGo.Transform.Position -= Vector2.X(textComponent.TextSize() + SETTING_HEIGHT * 0.7f);
         AddEntity(textGo);
         
-        var go = new Entity(this, middle);
+        var go = new Entity(middle);
         _ = go.AddComponent(new CheckboxComponent()
         {
             IsChecked = defaultValue,
             OnClick = setter,
             Size = SETTING_HEIGHT,
+            RenderSpace = RenderSpace.Screen
         });
         AddEntity(go);
         _settingsCount++;
@@ -80,7 +85,7 @@ public class OptionsScene : Scene
 
         if (Input.IsKeyPressed(KeyboardKey.Escape))
         {
-            SceneManager.Instance.LoadScene(new MenuScene());
+            SceneManager.Instance.Pop();
         }
     }
 }

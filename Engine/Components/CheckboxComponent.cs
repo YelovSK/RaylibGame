@@ -1,5 +1,5 @@
 ﻿using System.Numerics;
-using Engine.Helpers;
+using Engine.Extensions;
 using Raylib_CSharp.Collision;
 using Raylib_CSharp.Colors;
 using Raylib_CSharp.Interact;
@@ -14,6 +14,7 @@ public class CheckboxComponent : Component
     public Action<bool>? OnClick;
     
     public float Size;
+    public float StrokeWidth = 2f;
     public Color NormalColor = Color.DarkGray;
     public Color HoverColor = Color.Gray;
     public Color PressedColor = Color.LightGray;
@@ -22,11 +23,9 @@ public class CheckboxComponent : Component
     private bool _isPressed;
     private bool _wasPressed;
 
-    private const float STROKE_WIDTH = Layout.VIRTUAL_WIDTH * 0.002f;
-
     public override void Update(float dt)
     {
-        var mousePos = Layout.GetMousePosition();
+        var mousePos = Input.GetVirtualMousePosition();
         var bounds = new Rectangle(
             Entity.Transform.Position.X,
             Entity.Transform.Position.Y,
@@ -78,8 +77,8 @@ public class CheckboxComponent : Component
 
         if (IsChecked)
         {
-            Graphics.DrawLineEx(pos, new Vector2(pos.X + Size, pos.Y + Size), STROKE_WIDTH, Color.Black);
-            Graphics.DrawLineEx(pos with { X = pos.X + Size }, pos with { Y = pos.Y + Size }, STROKE_WIDTH, Color.Black);
+            Graphics.DrawLineEx(pos, new Vector2(pos.X + Size, pos.Y + Size), StrokeWidth, Color.Black);
+            Graphics.DrawLineEx(pos with { X = pos.X + Size }, pos with { Y = pos.Y + Size }, StrokeWidth, Color.Black);
         }
     }
 }

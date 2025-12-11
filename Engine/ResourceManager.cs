@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Raylib_CSharp.Audio;
 using Raylib_CSharp.Shaders;
 using Raylib_CSharp.Textures;
@@ -11,7 +11,7 @@ public class ResourceManager : Singleton<ResourceManager>
     private readonly Dictionary<string, Sound> _sounds = [];
     private readonly Dictionary<string, Shader> _shaders = [];
     private readonly Dictionary<string, Music> _music = [];
-    
+
     public static string LoadEmbedded(string name)
     {
         foreach (var assembly in new[] { Assembly.GetExecutingAssembly(), Assembly.GetEntryAssembly() }.Distinct())
@@ -19,9 +19,9 @@ public class ResourceManager : Singleton<ResourceManager>
             var resourceName = assembly
                 .GetManifestResourceNames()
                 .SingleOrDefault(x => x.EndsWith(name));
-            
+
             if (resourceName == null) continue;
-            
+
             using var stream = assembly.GetManifestResourceStream(resourceName);
             using var reader = new StreamReader(stream!);
             return reader.ReadToEnd();
@@ -29,7 +29,7 @@ public class ResourceManager : Singleton<ResourceManager>
 
         throw new Exception($"Could not find embedded shader resource: {name}");
     }
-    
+
     public Texture2D LoadTexture(string path)
     {
         if (_textures.TryGetValue(path, out var tex))
@@ -99,7 +99,7 @@ public class ResourceManager : Singleton<ResourceManager>
             _sounds.Remove(path);
         }
     }
-    
+
     public Music LoadMusic(string path)
     {
         if (_music.TryGetValue(path, out var music))

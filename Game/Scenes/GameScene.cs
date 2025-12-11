@@ -1,7 +1,6 @@
 ﻿using System.Numerics;
 using Engine;
 using Engine.Components;
-using Engine.Helpers;
 using Game.Components;
 using Raylib_CSharp.Colors;
 using Raylib_CSharp.Interact;
@@ -10,19 +9,17 @@ namespace Game.Scenes;
 
 public class GameScene : Scene
 {
-    private List<Entity> _platforms = new();
+    private List<Entity> _platforms = [];
     private Entity _player;
     private PlayerController _playerController;
     private BoxColliderComponent _playerCollider;
 
-    private const float PLAYER_SIZE = Layout.VIRTUAL_HEIGHT * 0.05f;
+    private const float PLAYER_SIZE = 20f;
 
     public override void Load()
     {
-        var middle = Layout.Center(0, 0);
-        
         // Create player
-        _player = new Entity(this);
+        _player = new Entity();
         _player.Transform.Position = new Vector2(10, 10);
         _player.AddComponent(new SpriteComponent
         {
@@ -38,17 +35,22 @@ public class GameScene : Scene
         AddEntity(_player);
 
         // Create ground
-        CreatePlatform(10, Layout.VIRTUAL_HEIGHT - 20, Layout.VIRTUAL_WIDTH - 20, 10);
+        CreatePlatform(10, Application.Instance.VirtualHeight - 20, 600, 10);
         
         // Platforms
-        CreatePlatform(10, Layout.VIRTUAL_HEIGHT - 80, 200, 10);
-        CreatePlatform(100, Layout.VIRTUAL_HEIGHT - 250, 200, 10);
-        CreatePlatform(200, Layout.VIRTUAL_HEIGHT - 160, 200, 10);
+        CreatePlatform(10, Application.Instance.VirtualHeight - 80, 200, 10);
+        CreatePlatform(100, Application.Instance.VirtualHeight - 250, 200, 10);
+        CreatePlatform(200, Application.Instance.VirtualHeight - 160, 200, 10);
+        
+        var camera = new Entity();
+        var cameraComponent = camera.AddComponent(new CameraComponent());
+        cameraComponent.Target = _player;
+        AddEntity(camera);
     }
 
     private void CreatePlatform(int x, int y, int width, int height)
     {
-        var platform = new Entity(this, new Vector2(x, y));
+        var platform = new Entity(new Vector2(x, y));
         platform.AddComponent(new SpriteComponent
         {
             Width = width,
@@ -69,7 +71,14 @@ public class GameScene : Scene
 
         if (Input.IsKeyPressed(KeyboardKey.Escape))
         {
-            SceneManager.Instance.LoadScene(new MenuScene());
+            SceneManager.Instance.Push(new MenuScene());
+        }
+        
+        if (Input.IsKeyPressed(KeyboardKey.R))
+        {
+            SceneManager.Instance.Pop();
+            SceneManager.Instance.Push(new GameScene());
+            GC.Collect();
         }
     }
 }

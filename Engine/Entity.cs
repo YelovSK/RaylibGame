@@ -6,19 +6,14 @@ namespace Engine;
 public class Entity
 {
     public readonly TransformComponent Transform;
-    public readonly Scene Scene;
+    public Scene Scene;
     private readonly List<Component> _components = [];
+    public ReadOnlyList<Component> Components => new(_components);
 
-    public Entity(Scene scene)
+    public Entity() : this(Vector2.Zero) { }
+
+    public Entity(Vector2 position)
     {
-        Scene = scene;
-        Transform = new TransformComponent();
-        AddComponent(Transform);
-    }
-    
-    public Entity(Scene scene, Vector2 position)
-    {
-        Scene = scene;
         Transform = new TransformComponent()
         {
             Position = position
@@ -35,46 +30,14 @@ public class Entity
 
     public T? GetComponent<T>() where T : Component
     {
-        return _components.OfType<T>().FirstOrDefault();
-    }
-
-    public void Start()
-    {
         foreach (var component in _components)
         {
-            component.Start();
+            if (component is T result)
+            {
+                return result;
+            }
         }
-    }
 
-    public void Update(float dt)
-    {
-        foreach (var c in _components)
-        {
-            c.Update(dt);
-        }
-    }
-    
-    public void FixedUpdate()
-    {
-        foreach (var c in _components)
-        {
-            c.FixedUpdate();
-        }
-    }
-
-    public void Draw()
-    {
-        foreach (var c in _components)
-        {
-            c.Draw();
-        }
-    }
-    
-    public void OnDestroy()
-    {
-        foreach (var c in _components)
-        {
-            c.OnDestroy();
-        }
+        return null;
     }
 }

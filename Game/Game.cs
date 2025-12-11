@@ -1,5 +1,4 @@
-﻿using Engine;
-using Engine.Helpers;
+using Engine;
 using Engine.PostProcessing;
 using Game.Persistence;
 using Game.Scenes;
@@ -12,72 +11,43 @@ using Raylib_CSharp.Windowing;
 
 namespace Game;
 
-public class Game : Application
+public class Game() : Application(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, TITLE)
 {
-    public const string TITLE = "Platformer";
-    public const int VIRTUAL_WIDTH = 640;
-    public const int VIRTUAL_HEIGHT = 360;
-    
-    private static Game _instance;
-    private static readonly Lock _lockObj = new();
-    public static Game Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                lock (_lockObj)
-                {
-                    _instance ??= new Game();
-                }
-            }
-
-            return _instance;
-        }
-    }
-
-    private Game() : base(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, TITLE) { }
+    private const string TITLE = "Platformer";
+    private const int VIRTUAL_WIDTH = 640;
+    private const int VIRTUAL_HEIGHT = 360;
 
     protected override void BeforeWindowInit()
     {
         Settings.Instance.Load();
         SaveData.Instance.Load();
-        
+
         if (Settings.Instance.IsVsyncEnabled)
         {
             Window.SetState(ConfigFlags.VSyncHint);
         }
-        
+
         // This doesn't actually do anything. Broken piece of shit.
         if (Settings.Instance.IsFullScreen)
         {
             Raylib.SetConfigFlags(ConfigFlags.BorderlessWindowMode);
         }
+        
+        Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
     }
 
     protected override void AfterWindowInit()
     {
         Input.SetExitKey(KeyboardKey.Null);
-        
-        SceneManager.Instance.LoadScene(new MenuScene());
+
+        SceneManager.Instance.Push(new MenuScene());
     }
-    
+
     protected override void Update(float dt)
     {
-        var scale = Math.Min(
-            Window.GetScreenWidth() / (float)VIRTUAL_WIDTH,
-            Window.GetScreenHeight() / (float)VIRTUAL_HEIGHT
-        );
-    
-        var offsetX = (Window.GetScreenWidth() - VIRTUAL_WIDTH * scale) / 2;
-        var offsetY = (Window.GetScreenHeight() - VIRTUAL_HEIGHT * scale) / 2;
-        Input.SetMouseScale(1f / scale, 1f/ scale);
-        Input.SetMouseOffset((int)offsetX, -(int)offsetY);
-        Console.WriteLine(Input.GetMousePosition());
-        
         SceneManager.Instance.Update(dt);
     }
-    
+
     protected override void Draw()
     {
         Graphics.ClearBackground(Color.SkyBlue);
@@ -87,7 +57,7 @@ public class Game : Application
     protected override void DrawFinalFrame(Texture2D finalTexture)
     {
         base.DrawFinalFrame(finalTexture);
-        
+
         if (Settings.Instance.ShowFps)
         {
             Graphics.DrawFPS(0, 0);
@@ -99,13 +69,19 @@ public class Game : Application
         Settings.Instance.Save();
         SaveData.Instance.Save();
     }
-    
+
+    protected override bool OnException(Exception exception)
+    {
+        // log or sth
+        return true;
+    }
+
     protected override IEnumerable<IPostProcessPass> InitializeShaders()
     {
         return
         [
-            new FullscreenShaderPass("bloom.fs"),
-            new FullscreenShaderPass("crt.fs"),
+            new FullscreenShaderPass("bloom.fs", () => Settings.Instance.EnableShaders),
+            new FullscreenShaderPass("crt.fs", () => Settings.Instance.EnableShaders),
         ];
     }
 }

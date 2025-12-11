@@ -31,6 +31,8 @@ public class PostProcessor
 
         foreach (var pass in _passes)
         {
+            if (!pass.IsEnabled()) continue;
+            
             pass.Apply(sourceTex, destBuffer);
 
             sourceTex = destBuffer.Texture;

@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Raylib_CSharp.Colors;
 using Raylib_CSharp.Rendering;
 using Raylib_CSharp.Shaders;
@@ -7,15 +7,21 @@ using Raylib_CSharp.Transformations;
 
 namespace Engine.PostProcessing;
 
-public class FullscreenShaderPass(string shaderName) : IPostProcessPass
+public class FullscreenShaderPass(string shaderName, Func<bool> enabledFunc) : IPostProcessPass
 {
+    public virtual bool IsEnabled() => enabledFunc();
+
+    public FullscreenShaderPass(string shaderName) : this(shaderName, () => true)
+    {
+    }
+
     private readonly Shader _shader = ResourceManager.Instance.LoadShader(null, shaderName);
 
     public Texture2D Apply(Texture2D input, RenderTexture2D output)
     {
         Graphics.BeginTextureMode(output);
         Graphics.BeginShaderMode(_shader);
-    
+
         SetUniforms(_shader);
 
         Graphics.DrawTexturePro(
@@ -29,7 +35,7 @@ public class FullscreenShaderPass(string shaderName) : IPostProcessPass
 
         Graphics.EndShaderMode();
         Graphics.EndTextureMode();
-        
+
         return output.Texture;
     }
 

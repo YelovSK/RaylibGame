@@ -11,21 +11,34 @@ namespace Engine;
 
 public abstract class Application
 {
+    // To explain, the issue is that I want the game itself to define
+    // the virtual resolution, but I still need to have access to the virtual resolution
+    // in the engine project, e.g. for getting the virtual mouse coordinates in components.
+    /// <summary>
+    /// Will be null if an instance wasn't created with the constructor.
+    /// </summary>
+    public static Application Instance { get; private set; }
+    
     protected PostProcessor PostProcessor { get; private set; }
     protected RenderTexture2D RenderTarget { get; private set; }
 
-    protected readonly int VirtualWidth;
-    protected readonly int VirtualHeight;
-    protected readonly string Title;
+    public int VirtualWidth { get; private set; }
+    public int VirtualHeight  { get; private set; }
+    public string Title  { get; private set; }
     
     /// <summary>
     /// Exits cleanly after finishing the current frame, cleanup etc.
     /// </summary>
     public void Close() => _closeRequested = true;
     private bool _closeRequested;
+    
+    public double UpdateTimeMs  { get; private set; }
+    public double DrawTimeMs  { get; private set; }
 
-    public Application(int virtualWidth, int virtualHeight, string title)
+    protected Application(int virtualWidth, int virtualHeight, string title)
     {
+        Instance = this;
+        
         VirtualWidth = virtualWidth;
         VirtualHeight = virtualHeight;
         Title = title;
@@ -37,7 +50,9 @@ public abstract class Application
     protected abstract void Update(float dt);
     protected abstract void Draw();
     protected abstract void OnExit();
-    protected abstract IEnumerable<IPostProcessPass> InitializeShaders();
+    /// <returns>Return true to throw exception, and false to continue.</returns>
+    protected virtual bool OnException(Exception exception) => true;
+    protected virtual IEnumerable<IPostProcessPass> InitializeShaders() => [];
 
     protected virtual void DrawFinalFrame(Texture2D finalTexture)
     {
@@ -66,7 +81,7 @@ public abstract class Application
         BeforeWindowInit();
 
         Window.Init(Window.GetScreenWidth(), Window.GetScreenHeight(), Title);
-
+        
         RenderTarget = RenderTexture2D.Load(VirtualWidth, VirtualHeight);
         RenderTarget.Texture.SetFilter(TextureFilter.Point);
         
@@ -80,25 +95,38 @@ public abstract class Application
 
         while (!Window.ShouldClose() && !_closeRequested)
         {
-            var dt = Time.GetFrameTime();
+            try
+            {
+                var dt = Time.GetFrameTime();
 
-            // Update
-            InputBuffer.Instance.Gather();
-            Update(dt);
+                // Update
+                var updateStart = Time.GetTime();
+                InputBuffer.Instance.Gather();
+                Update(dt);
+                var updateEnd = Time.GetTime();
+                UpdateTimeMs = (updateEnd - updateStart) * 1000;
 
-            // Draw
-            Graphics.BeginTextureMode(RenderTarget);
-            Draw();
-            Graphics.EndTextureMode();
+                // Draw
+                var drawStart = Time.GetTime();
+                Graphics.BeginTextureMode(RenderTarget);
+                Draw();
+                Graphics.EndTextureMode();
 
-            // Post-process
-            var postProcessedTexture = PostProcessor.Apply(RenderTarget.Texture);
+                // Post-process
+                var postProcessedTexture = PostProcessor.Apply(RenderTarget.Texture);
 
-            // Scale up
-            Graphics.BeginDrawing();
-            Graphics.ClearBackground(Color.Black);
-            DrawFinalFrame(postProcessedTexture);
-            Graphics.EndDrawing();
+                // Scale up
+                Graphics.BeginDrawing();
+                Graphics.ClearBackground(Color.Black);
+                DrawFinalFrame(postProcessedTexture);
+                Graphics.EndDrawing();
+                var drawEnd  = Time.GetTime();
+                DrawTimeMs = (drawEnd - drawStart) * 1000;
+            }
+            catch (Exception e)
+            {
+                if (OnException(e)) throw;
+            }
         }
         
         // Cleanup

@@ -26,7 +26,12 @@ public class SaveData : Singleton<SaveData>
         if (File.Exists(SAVE_PATH))
         {
             var json = File.ReadAllText(SAVE_PATH);
-            Instance = JsonSerializer.Deserialize(json, SaveDataJsonContext.Default.SaveData);
+            
+            var save = JsonSerializer.Deserialize(json, SaveDataJsonContext.Default.SaveData) ?? new SaveData();
+            foreach (var property in typeof(SaveData).GetProperties().Where(p => p.CanWrite))
+            {
+                property.SetValue(this, property.GetValue(save, null), null);
+            }
         }
     }
 }

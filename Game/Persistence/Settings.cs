@@ -34,7 +34,12 @@ public class Settings : Singleton<Settings>
         if (File.Exists(SETTINGS_PATH))
         {
             var json = File.ReadAllText(SETTINGS_PATH);
-            Instance = JsonSerializer.Deserialize(json, SettingsJsonContext.Default.Settings);
+
+            var settings = JsonSerializer.Deserialize(json, SettingsJsonContext.Default.Settings) ?? new Settings();
+            foreach (var property in typeof(Settings).GetProperties().Where(p => p.CanWrite))
+            {
+                property.SetValue(this, property.GetValue(settings, null), null);
+            }
         }
     }
 }
