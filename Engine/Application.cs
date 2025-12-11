@@ -52,6 +52,10 @@ public abstract class Application
     protected abstract void AfterWindowInit();
     protected abstract void Update(float dt);
     protected abstract void Draw();
+    /// <summary>
+    /// Do the final drawing here.
+    /// </summary>
+    protected virtual void BeforeDrawEnd() { }
     protected abstract void OnExit();
     /// <returns>Return true to throw exception, and false to continue.</returns>
     protected virtual bool OnException(Exception exception) => true;
@@ -131,6 +135,7 @@ public abstract class Application
                     0.0f,
                     Color.White
                 );
+                BeforeDrawEnd();
                 Graphics.EndDrawing(); 
 
                 // Scale up

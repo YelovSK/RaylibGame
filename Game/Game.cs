@@ -54,6 +54,13 @@ public class Game() : Application(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, TITLE)
         SceneManager.Instance.Draw();
     }
 
+    protected override void BeforeDrawEnd()
+    {
+        if (Settings.Instance.ShowFps)
+        {
+            Graphics.DrawFPS(0, 0);
+        }
+    }
 
     protected override void OnExit()
     {
