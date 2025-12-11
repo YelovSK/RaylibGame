@@ -6,23 +6,31 @@ namespace Engine;
 
 public abstract class Scene
 {
-    public ReadOnlyList<Entity> Entities => new(_entities);
-    public ReadOnlyList<CameraComponent> Cameras => new(_cameras);
+    public ReadOnlyHashSet<Entity> Entities => new(_entities);
+    public ReadOnlyHashSet<CameraComponent> Cameras => new(_cameras);
     
-    private readonly List<Entity> _entities = [];
-    private readonly List<CameraComponent> _cameras = [];
+    /// <summary>
+    /// List of entities that have been marked for destroy.
+    /// Have to wait until the current loop finishes.
+    /// </summary>
+    private readonly HashSet<Entity> _entitiesToDestroy = [];
+    private readonly HashSet<Entity> _entities = [];
+    private readonly HashSet<CameraComponent> _cameras = [];
     
     // Is around 50% faster when scene has a bunch of components.
     // Have to somehow keep it up to date which is annoying.
     // Plus there is a bigger overhead when adding/removing components.
-    private readonly List<IUpdatable> _updatables = [];
-    private readonly List<IDrawable> _screenDrawables = [];
-    private readonly List<IDrawable> _worldDrawables = [];
+    private readonly HashSet<IUpdatable> _updatables = [];
+    private readonly HashSet<IDrawable> _screenDrawables = [];
+    private readonly HashSet<IDrawable> _worldDrawables = [];
     
     // Camera components register themselves.
     // Right now, only a single camera is used.
     public CameraComponent? Camera => _cameras.FirstOrDefault();
 
+    /// <summary>
+    /// Initialize entities etc here.
+    /// </summary>
     public abstract void Load();
 
     public void Start()
@@ -36,20 +44,11 @@ public abstract class Scene
         }
     }
 
-    public void RegisterEntity(Entity entity)
+    public Entity CreateEntity()
     {
+        var entity = new Entity(this);
         _entities.Add(entity);
-    }
-
-    public void RemoveEntity(Entity entity)
-    {
-        foreach (var component in entity.Components)
-        {
-            UnregisterComponent(component);
-            component.OnDestroy();
-        }
-
-        _entities.Remove(entity);
+        return entity;
     }
 
     public virtual void Update(float dt)
@@ -58,6 +57,8 @@ public abstract class Scene
         {
             update.Update(dt);
         }
+        
+        InternalDestroy();
     }
 
     public void Draw()
@@ -75,7 +76,12 @@ public abstract class Scene
                 component.OnDestroy();
             }
         }
+        
+        // I guess it's better to pay the price when changing a scene than during gameplay?
+        GC.Collect(2, GCCollectionMode.Forced, blocking: true);
     }
+
+    public void Destroy(Entity entity) => _entitiesToDestroy.Add(entity);
 
     public void RegisterComponent<T>(T component) where T : Component
     {
@@ -93,27 +99,6 @@ public abstract class Scene
                     break;
                 case RenderSpace.World:
                     _worldDrawables.Add(drawable);
-                    break;
-            }
-        }
-    }
-    
-    public void UnregisterComponent<T>(T component) where T : Component
-    {
-        if (component is IUpdatable updateable)
-        {
-            _updatables.Remove(updateable);
-        }
-        
-        if (component is IDrawable drawable)
-        {
-            switch (drawable.RenderSpace)
-            {
-                case RenderSpace.Screen:
-                    _screenDrawables.Remove(drawable);
-                    break;
-                case RenderSpace.World:
-                    _worldDrawables.Remove(drawable);
                     break;
             }
         }
@@ -153,5 +138,47 @@ public abstract class Scene
         {
             draw.Draw();
         }
+    }
+
+    /// <summary>
+    /// Destroys entities that were marked for destroy.
+    /// </summary>
+    private void InternalDestroy()
+    {
+        if (_entitiesToDestroy.Count == 0)
+        {
+            return;
+        }
+        
+        foreach (var entity in _entitiesToDestroy)
+        {
+            // Remove components
+            foreach (var component in entity.Components)
+            {
+                if (component is IDrawable drawable)
+                {
+                    switch (drawable.RenderSpace)
+                    {
+                        case RenderSpace.World:
+                            _worldDrawables.Remove(drawable);
+                            break;
+                        case RenderSpace.Screen:
+                            _screenDrawables.Remove(drawable);
+                            break;
+                    }
+                }
+            
+                if (component is IUpdatable updatable)
+                {
+                    _updatables.Remove(updatable);
+                }
+            
+                component.OnDestroy();
+            }
+        
+            _entities.Remove(entity);
+        }
+
+        _entitiesToDestroy.Clear();
     }
 }

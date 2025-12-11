@@ -18,7 +18,11 @@ public class SceneManager : Singleton<SceneManager>
     /// </summary>
     public void Load(Scene scene)
     {
-        _scenes.Clear();
+        while (_scenes.Count > 0)
+        {
+            _scenes.Pop().OnDestroy();
+        }
+        
         Push(scene);
     }
 

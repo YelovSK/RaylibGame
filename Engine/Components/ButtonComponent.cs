@@ -15,7 +15,7 @@ public class ButtonComponent : Component, IUpdatable, IDrawable
 {
     public RenderSpace RenderSpace { get; set; } = RenderSpace.Screen;
     
-    public required string Text;
+    public string Text;
     public int FontSize = 20;
     public Vector2 Size;
     public float StrokeWidth = 2f;

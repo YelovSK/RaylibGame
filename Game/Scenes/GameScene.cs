@@ -11,7 +11,6 @@ public class GameScene : Scene
 {
     private List<Entity> _platforms = [];
     private Entity _player;
-    private PlayerController _playerController;
     private BoxColliderComponent _playerCollider;
 
     private const float PLAYER_SIZE = 20f;
@@ -19,19 +18,17 @@ public class GameScene : Scene
     public override void Load()
     {
         // Create player
-        _player = new Entity(this);
+        _player = CreateEntity();
         _player.Transform.Position = new Vector2(10, 10);
-        _player.AddComponent(new SpriteComponent
-        {
-            Width = (int)PLAYER_SIZE,
-            Height = (int)PLAYER_SIZE,
-            Color = Color.White
-        });
-        _playerCollider = _player.AddComponent(new BoxColliderComponent
-        {
-            Bounds = new(_player.Transform.Position.X, _player.Transform.Position.Y, PLAYER_SIZE, PLAYER_SIZE)
-        });
-        _playerController = _player.AddComponent(new PlayerController());
+        
+        var playerSprite = _player.AddComponent<SpriteComponent>();
+        playerSprite.Width = (int)PLAYER_SIZE;
+        playerSprite.Height = (int)PLAYER_SIZE;
+        playerSprite.Color = Color.White;
+
+        var playerCollider = _player.AddComponent<BoxColliderComponent>();
+        playerCollider.Bounds = new(_player.Transform.Position.X, _player.Transform.Position.Y, PLAYER_SIZE, PLAYER_SIZE);
+        _player.AddComponent<PlayerController>();
 
         // Create ground
         CreatePlatform(10, Application.Instance.VirtualHeight - 20, 600, 10);
@@ -40,25 +37,24 @@ public class GameScene : Scene
         CreatePlatform(10, Application.Instance.VirtualHeight - 80, 200, 10);
         CreatePlatform(100, Application.Instance.VirtualHeight - 250, 200, 10);
         CreatePlatform(200, Application.Instance.VirtualHeight - 160, 200, 10);
-        
-        var camera = new Entity(this);
-        var cameraComponent = camera.AddComponent(new CameraComponent());
+
+        var camera = CreateEntity();
+        var cameraComponent = camera.AddComponent<CameraComponent>();
         cameraComponent.Target = _player;
     }
 
     private void CreatePlatform(int x, int y, int width, int height)
     {
-        var platform = new Entity(this, new Vector2(x, y));
-        platform.AddComponent(new SpriteComponent
-        {
-            Width = width,
-            Height = height,
-            Color = Color.Green
-        });
-        platform.AddComponent(new BoxColliderComponent
-        {
-            Bounds = new(platform.Transform.Position.X, platform.Transform.Position.Y, width, height)
-        });
+        var platform = CreateEntity();
+        platform.Transform.Position = new Vector2(x, y);
+        
+        var sprite = platform.AddComponent<SpriteComponent>();
+        sprite.Width = width;
+        sprite.Height = height;
+        sprite.Color = Color.Green;
+
+        var collider = platform.AddComponent<BoxColliderComponent>();
+        collider.Bounds = new(platform.Transform.Position.X, platform.Transform.Position.Y, width, height);
         _platforms.Add(platform);
     }
 
@@ -75,7 +71,6 @@ public class GameScene : Scene
         {
             SceneManager.Instance.Pop();
             SceneManager.Instance.Push(new GameScene());
-            GC.Collect();
         }
     }
 }

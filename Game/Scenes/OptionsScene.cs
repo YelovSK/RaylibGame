@@ -1,7 +1,6 @@
 ﻿using System.Numerics;
 using Engine;
 using Engine.Components;
-using Engine.Enums;
 using Engine.Extensions;
 using Engine.Helpers;
 using Game.Persistence;
@@ -57,23 +56,20 @@ public class OptionsScene : Scene
     {
         var middle = VirtualLayout.Center(0, 0);
         middle.Y += SETTING_OFFSET * _settingsCount;
-        
-        var textGo = new Entity(this, middle);
-        var textComponent = textGo.AddComponent(new TextComponent()
-        {
-            Text = text,
-            //RenderSpace = RenderSpace.Screen
-        });
+
+        var textGo = CreateEntity();
+        textGo.Transform.Position = middle;
+        var textComponent = textGo.AddComponent<TextComponent>();
+        textComponent.Text = text;
         textGo.Transform.Position -= Vector2.X(textComponent.TextSize() + SETTING_HEIGHT * 0.7f);
+
+        var go = CreateEntity();
+        go.Transform.Position = middle;
+        var checkbox = go.AddComponent<CheckboxComponent>();
+        checkbox.IsChecked = defaultValue;
+        checkbox.OnClick = setter;
+        checkbox.Size = SETTING_HEIGHT;
         
-        var go = new Entity(this, middle);
-        _ = go.AddComponent(new CheckboxComponent()
-        {
-            IsChecked = defaultValue,
-            OnClick = setter,
-            Size = SETTING_HEIGHT,
-            //RenderSpace = RenderSpace.Screen
-        });
         _settingsCount++;
     }
 

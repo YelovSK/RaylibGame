@@ -11,20 +11,19 @@ public class PerformanceTestScene : Scene
     public override void Load()
     {
         var middle = VirtualLayout.Center();
-        
+
         for (var i = 0; i < 100_000; i++)
         {
             var r = Convert.ToByte(Random.Shared.Next(0, 255));
             var g = Convert.ToByte(Random.Shared.Next(0, 255));
             var b = Convert.ToByte(Random.Shared.Next(0, 255));
-            var entity = new Entity(this, middle);
-            entity.AddComponent(new SpriteComponent()
-            {
-                Width = 10,
-                Height = 10,
-                Color = new Color(r, g, b, 255)
-            });
-            entity.AddComponent(new RandomMovementComponent());
+            var entity = CreateEntity();
+            entity.Transform.Position = middle;
+            var sprite = entity.AddComponent<SpriteComponent>();
+            sprite.Width = 10;
+            sprite.Height = 10;
+            sprite.Color = new Color(r, g, b, 255);
+            entity.AddComponent<RandomMovementComponent>();
         }
     }
 }

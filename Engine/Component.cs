@@ -1,4 +1,3 @@
-using Engine.Components;
 using Engine.Enums;
 
 namespace Engine;
@@ -21,8 +20,10 @@ public interface IDrawable
 
 public abstract class Component
 {
-    public Entity Entity { get; set; }
-    public CameraComponent? Camera => Entity.Scene.Camera;
+    /// <summary>
+    /// Should be set only in <see cref="Scene.CreateEntity()"/>
+    /// </summary>
+    public Entity Entity { get; internal init; } = null!;
 
     public virtual void Start()
     {

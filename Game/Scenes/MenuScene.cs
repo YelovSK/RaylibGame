@@ -40,16 +40,15 @@ public class MenuScene : Scene
     private ButtonComponent AddButton(string text, float y)
     {
         var middle = VirtualLayout.Center(BUTTON_WIDTH, 0);
+
+        var buttonObject = CreateEntity();
+        buttonObject.Transform.Position = middle with { Y = y };
+        var button = buttonObject.AddComponent<ButtonComponent>();
+        button.Text = text;
+        button.FontSize = (int)(0.04f * Application.Instance.VirtualWidth);
+        button.Size = new Vector2(BUTTON_WIDTH, BUTTON_HEIGHT);
+        button.RenderSpace = RenderSpace.Screen;
         
-        var buttonObject = new Entity(this, new Vector2(middle.X, y));
-        var button = new ButtonComponent
-        {
-            Text = text,
-            FontSize = (int)(0.04f * Application.Instance.VirtualWidth),
-            Size = new Vector2(BUTTON_WIDTH, BUTTON_HEIGHT),
-            RenderSpace = RenderSpace.Screen
-        };
-        buttonObject.AddComponent(button);
         return button;
     }
 }

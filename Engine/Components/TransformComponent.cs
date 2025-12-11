@@ -5,7 +5,7 @@ namespace Engine.Components;
 public class TransformComponent : Component
 {
     private readonly List<TransformComponent> _children = [];
-    public ReadOnlyList<TransformComponent> Children => new(_children);
+    public ReadOnlyCollections<TransformComponent> Children => new(_children);
 
     // Cache
     private Matrix4x4 _worldMatrix;
