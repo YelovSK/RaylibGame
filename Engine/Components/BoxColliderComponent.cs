@@ -14,7 +14,7 @@ public class BoxColliderComponent : Component, IUpdatable
         Bounds.X = Entity.Transform.Position.X;
         Bounds.Y = Entity.Transform.Position.Y;
     }
-    
+
     #if DEBUG
     public void Draw()
     {

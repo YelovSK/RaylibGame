@@ -17,7 +17,7 @@ public class TextComponent : Component, IDrawable
         return TextManager.MeasureText(Text, FontSize);
     }
 
-    public  void Draw()
+    public void Draw(float alpha)
     {
         Graphics.DrawText(Text,
             (int)Entity.Transform.Position.X,

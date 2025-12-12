@@ -1,3 +1,4 @@
+using Engine.Collections;
 using Engine.Components;
 
 namespace Engine;
@@ -27,16 +28,16 @@ public class Entity
         return component;
     }
 
-    public T? GetComponent<T>() where T : Component
+    public T? GetComponent<T>() where T : Component => GetComponents<T>().FirstOrDefault();
+
+    public IEnumerable<T> GetComponents<T>() where T : Component
     {
         foreach (var component in _components)
         {
             if (component is T result)
             {
-                return result;
+                yield return result;
             }
         }
-
-        return null;
     }
 }

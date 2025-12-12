@@ -3,13 +3,13 @@ using Engine;
 using Engine.Components;
 using Engine.Extensions;
 using Game.Persistence;
-using Raylib_CSharp;
 using Raylib_CSharp.Collision;
 using Raylib_CSharp.Interact;
+using Raylib_CSharp.Transformations;
 
 namespace Game.Components;
 
-public class PlayerController : Component, IUpdatable
+public class PlayerController : Component, IFixedUpdatable
 {
     // Helper cheats
     public const float COTOYE_TIME = 0.2f;
@@ -39,7 +39,14 @@ public class PlayerController : Component, IUpdatable
     private int _dashesCount = 0;
 
     private List<BoxColliderComponent?> _sceneColliders = [];
-    private BoxColliderComponent _collider;
+
+    private Rectangle Bounds =>
+        new Rectangle(
+            Entity.Transform.Position.X,
+            Entity.Transform.Position.Y,
+            GetComponent<SpriteComponent>().Width,
+            GetComponent<SpriteComponent>().Height 
+        );
 
     public override void Start()
     {
@@ -49,11 +56,11 @@ public class PlayerController : Component, IUpdatable
             .Select(go => go.GetComponent<BoxColliderComponent>())
             .Where(col => col != null)
             .ToList();
-        _collider = Entity.GetComponent<BoxColliderComponent>()!;
     }
 
-    public void Update(float dt)
+    public void FixedUpdate()
     {
+        var dt = (float)FixedTime.TICK_RATE;
         CheckCollisions();
 
         HandleJump();
@@ -76,7 +83,7 @@ public class PlayerController : Component, IUpdatable
     {
         if (_isDashing)
         {
-            if (Time.GetTime() > _startedDashOn + DASH_LENGTH)
+            if (FixedTime.GetTime() > _startedDashOn + DASH_LENGTH)
             {
                 _isDashing = false;
                 Velocity.Y /= 4;
@@ -90,7 +97,7 @@ public class PlayerController : Component, IUpdatable
             return;
         }
 
-        if (!Input.IsKeyPressed(Settings.Instance.DashKey))
+        if (!InputManager.Instance.IsKeyPressedFixedTick(Settings.Instance.DashKey))
         {
             return;
         }
@@ -100,7 +107,7 @@ public class PlayerController : Component, IUpdatable
             return;
         }
 
-        _startedDashOn = Time.GetTime();
+        _startedDashOn = FixedTime.GetTime();
         _isDashing = true;
         var direction = InputDirection();
         _dashDirection = direction;
@@ -150,7 +157,7 @@ public class PlayerController : Component, IUpdatable
         {
             return;
         }
-        var wasJumpPressed = InputBuffer.Instance.WasKeyPressedRecently(Settings.Instance.JumpKey, JUMP_BUFFER_TIME);
+        var wasJumpPressed = InputManager.Instance.IsKeyBuffered(Settings.Instance.JumpKey, JUMP_BUFFER_TIME);
         if (!wasJumpPressed)
         {
             return;
@@ -162,14 +169,14 @@ public class PlayerController : Component, IUpdatable
         }
 
         _consumed = false;
-        if (_canHyperDashUntil > Time.GetTime())
+        if (_canHyperDashUntil > FixedTime.GetTime())
         {
             Console.WriteLine("Hyper dashing");
             Velocity.X *= 6;
         }
         Velocity.Y = -JUMP_ACCELERATION;
 
-        InputBuffer.Instance.ConsumeKeyPress(Settings.Instance.JumpKey);
+        InputManager.Instance.ConsumeKeyPress(Settings.Instance.JumpKey);
         _jumpCount--;
 
         //_jumpToConsume = false;
@@ -182,18 +189,19 @@ public class PlayerController : Component, IUpdatable
 
         foreach (var collider in _sceneColliders)
         {
-            var overlap = ShapeHelper.GetCollisionRec(collider.Bounds, _collider.Bounds);
+            var overlap = ShapeHelper.GetCollisionRec(collider.Bounds, Bounds);
 
             if (overlap.Width == 0 || overlap.Height == 0)
             {
                 continue;
             }
 
-            var dirX = _collider.Bounds.X < collider.Bounds.X
+            
+            var dirX = Velocity.X > 0
                 ? -1
                 : 1;
 
-            var dirY = _collider.Bounds.Y < collider.Bounds.Y
+            var dirY = Velocity.Y > 0
                 ? -1
                 : 1;
 
@@ -217,6 +225,7 @@ public class PlayerController : Component, IUpdatable
 
                 Entity.Transform.Position += Vector2.Y(overlap.Height * dirY);
                 Velocity.Y = 0;
+                _isDashing = false;
             }
 
             break;
@@ -224,7 +233,7 @@ public class PlayerController : Component, IUpdatable
 
         if (_isGrounded && !hitGround)
         {
-            _timeLeftGrounded = Time.GetTime();
+            _timeLeftGrounded = FixedTime.GetTime();
             _jumpCount = 1;
         }
 
@@ -234,7 +243,7 @@ public class PlayerController : Component, IUpdatable
             _dashesCount = 1;
             if (_isDashing)
             {
-                _canHyperDashUntil = Time.GetTime() + 0.2f;
+                _canHyperDashUntil = FixedTime.GetTime() + (FixedTime.TICK_RATE * 3);
             }
         }
 

@@ -7,15 +7,24 @@ public interface IUpdatable
     void Update(float dt);
 }
 
+public interface IFixedUpdatable
+{
+    void FixedUpdate();
+}
+
+public interface ILateUpdatable
+{
+    void LateUpdate(float dt);
+}
+
 public interface IDrawable
 {
     /// <summary>
     /// Uses Camera2D if set to <see cref="RenderSpace.World"/> and a camera is present in a scene.
-    /// Has to be set PRIOR to adding the component to an entity.
     /// </summary>
     public RenderSpace RenderSpace { get; set; }
     
-    void Draw();
+    void Draw(float alpha);
 }
 
 public abstract class Component
@@ -33,4 +42,8 @@ public abstract class Component
     {
         
     }
+    
+    public T? GetComponent<T>() where T : Component => Entity.GetComponent<T>();
+    
+    public IEnumerable<T> GetComponents<T>() where T : Component => Entity.GetComponents<T>();
 }

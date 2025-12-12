@@ -32,10 +32,17 @@ public class RandomMovementComponent : Component, IUpdatable
 {
     private readonly Random _random = new();
     
+    public void FixedUpdate()
+    {
+        var dx = _random.Next(0, 2);
+        var dy = _random.Next(0, 2);
+        Entity.Transform.Position += new Vector2(dx, dy);
+    }
+    
     public void Update(float dt)
     {
-        var dx = _random.Next(0, 10);
-        var dy = _random.Next(0, 10);
-        Entity.Transform.Position += new Vector2(dx, dy) * dt;
+        var dx = _random.Next(0, 2);
+        var dy = _random.Next(0, 2);
+        Entity.Transform.Position += new Vector2(dx, dy) * dt * 30f;
     }
 }

@@ -3,6 +3,7 @@ using Engine;
 using Engine.Components;
 using Engine.Enums;
 using Engine.Helpers;
+using Raylib_CSharp.Colors;
 
 namespace Game.Scenes;
 
@@ -16,6 +17,12 @@ public class MenuScene : Scene
         var middle = VirtualLayout.AnchorToScreen((int)BUTTON_WIDTH, (int)BUTTON_HEIGHT, Anchor.Center);
         
         var buttonOffset = BUTTON_HEIGHT * 1.2f;
+
+        var background = CreateEntity();
+        var backgroundSprite = background.AddComponent<SpriteComponent>();
+        backgroundSprite.Width = Application.Instance.VirtualWidth;
+        backgroundSprite.Height = Application.Instance.VirtualHeight;
+        backgroundSprite.Color = Color.SkyBlue;
 
         var play = AddButton("Play", middle.Y - buttonOffset);
         play.OnClick = () =>

@@ -26,7 +26,7 @@ public class CheckboxComponent : Component, IUpdatable, IDrawable
     private bool _isPressed;
     private bool _wasPressed;
 
-    public  void Update(float dt)
+    public void Update(float dt)
     {
         var mousePos = Input.GetVirtualMousePosition();
         var bounds = new Rectangle(
@@ -55,7 +55,7 @@ public class CheckboxComponent : Component, IUpdatable, IDrawable
         }
     }
 
-    public  void Draw()
+    public void Draw(float alpha)
     {
         var pos = Entity.Transform.Position;
 

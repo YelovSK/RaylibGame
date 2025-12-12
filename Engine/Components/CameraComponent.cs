@@ -4,11 +4,11 @@ using Raylib_CSharp.Camera.Cam2D;
 
 namespace Engine.Components;
 
-public class CameraComponent : Component, IUpdatable
+public class CameraComponent : Component, ILateUpdatable
 {
     public Camera2D Camera = new();
     public Entity? Target { get; set; }
-    public float FollowSpeed = 5.0f;
+    public float FollowSpeed = 7f;
 
     public CameraComponent()
     {
@@ -21,7 +21,7 @@ public class CameraComponent : Component, IUpdatable
         Entity.Scene.RegisterCamera(this);
     }
 
-    public void Update(float dt)
+    public void LateUpdate(float dt)
     {
         if (Target is null)
         {

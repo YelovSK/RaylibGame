@@ -50,8 +50,14 @@ public abstract class Application
     // Abstract
     protected abstract void BeforeWindowInit();
     protected abstract void AfterWindowInit();
-    protected abstract void Update(float dt);
-    protected abstract void Draw();
+    protected virtual void Update(float dt) => SceneManager.Instance.Update(dt);
+    protected virtual void FixedUpdate() => SceneManager.Instance.FixedUpdate();
+    protected virtual void LateUpdate(float dt) => SceneManager.Instance.LateUpdate(dt);
+    protected virtual void Draw(float alpha)
+    {
+        Graphics.ClearBackground(Color.Black);
+        SceneManager.Instance.Draw(alpha);
+    }
     /// <summary>
     /// Do the final drawing here.
     /// </summary>
@@ -90,6 +96,7 @@ public abstract class Application
         
         AfterWindowInit();
 
+        double accumulator = 0;
         while (!Window.ShouldClose() && !_closeRequested)
         {
             try
@@ -103,15 +110,39 @@ public abstract class Application
 
                 // Update
                 var updateStart = Time.GetTime();
-                InputBuffer.Instance.Gather();
+                InputManager.Instance.Gather();
                 Update(dt);
+                
+                // Fixed update
+                accumulator += dt;
+                while (accumulator >= FixedTime.TICK_RATE)
+                {
+                    // TODO: this is absolutely stupid, remove.
+                    foreach (var entity in SceneManager.Instance.Current.Entities)
+                    {
+                        entity.Transform.SavePrevious();
+                    }
+                    FixedUpdate();
+                    FixedTime.Ticks++;
+                    accumulator -= FixedTime.TICK_RATE;
+                }
+                
+                LateUpdate(dt);
+                
                 var updateEnd = Time.GetTime();
+                var alpha = (float)(accumulator / FixedTime.TICK_RATE);
+                // TODO: this is absolutely stupid, remove.
+                foreach (var entity in SceneManager.Instance.Current.Entities)
+                {
+                    entity.Transform.ComputeRenderState(alpha);
+                }
+                
                 UpdateTimeMs = (updateEnd - updateStart) * 1000;
 
                 // Draw in virtual resolution
                 var drawStart = Time.GetTime();
                 Graphics.BeginTextureMode(_virtualRenderTarget);
-                Draw();
+                Draw(alpha);
                 Graphics.EndTextureMode();
 
                 // Apply shaders to low res texture

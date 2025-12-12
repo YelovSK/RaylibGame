@@ -54,14 +54,24 @@ public class SceneManager : Singleton<SceneManager>
             scene!.OnDestroy();
         }
     }
+    
+    public void FixedUpdate()
+    {
+        Current?.FixedUpdate();
+    }
 
     public void Update(float dt)
     {
         Current?.Update(dt);
     }
-
-    public void Draw()
+    
+    public void LateUpdate(float dt)
     {
-        Current?.Draw();
+        Current?.LateUpdate(dt);
+    }
+
+    public void Draw(float alpha)
+    {
+        Current?.Draw(alpha);
     }
 }

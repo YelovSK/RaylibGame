@@ -1,4 +1,5 @@
 using System.Numerics;
+using Engine.Collections;
 
 namespace Engine.Components;
 
@@ -12,12 +13,17 @@ public class TransformComponent : Component
     private bool _isDirty = true;
 
     // Local
+    
+    public Vector2 PreviousLocalPosition;
+    public Vector2 LocalRenderPosition;
     public Vector2 LocalPosition
     {
         get;
         set { field = value; SetDirty(); }
     }
 
+    public float PreviousLocalRotation;
+    public float LocalRenderRotation;
     public float LocalRotation
     {
         get;
@@ -121,8 +127,8 @@ public class TransformComponent : Component
         }
         
         var localMat = Matrix4x4.CreateScale(new Vector3(LocalScale.X, LocalScale.Y, 1)) *
-                                Matrix4x4.CreateRotationZ(LocalRotation) *
-                                Matrix4x4.CreateTranslation(LocalPosition.AsVector3());
+                       Matrix4x4.CreateRotationZ(LocalRotation) *
+                       Matrix4x4.CreateTranslation(LocalPosition.AsVector3());
 
         _worldMatrix = Parent != null
             ? localMat * Parent.GetWorldMatrix()
@@ -130,6 +136,31 @@ public class TransformComponent : Component
 
         _isDirty = false;
         return _worldMatrix;
+    }
+    
+    public void SavePrevious()
+    {
+        PreviousLocalPosition = Position;
+        PreviousLocalRotation = Rotation;
+    }
+
+    public void ComputeRenderState(float alpha)
+    {
+        LocalRenderPosition = Vector2.Lerp(PreviousLocalPosition, Position, alpha);
+        LocalRenderRotation = LerpAngle(PreviousLocalRotation, Rotation, alpha);
+    }
+        private static float LerpAngle(float a, float b, float t)
+    {
+        // shortest-path lerp for angles (radians). Adjust if you use degrees.
+        float diff = WrapAngle(b - a);
+        return a + diff * t;
+    }
+
+    private static float WrapAngle(float angle)
+    {
+        while (angle > MathF.PI) angle -= MathF.Tau;
+        while (angle < -MathF.PI) angle += MathF.Tau;
+        return angle;
     }
     
     private void SetDirty()

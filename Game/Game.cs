@@ -4,7 +4,6 @@ using Game.Persistence;
 using Game.PostProcessing;
 using Game.Scenes;
 using Raylib_CSharp;
-using Raylib_CSharp.Colors;
 using Raylib_CSharp.Interact;
 using Raylib_CSharp.Rendering;
 using Raylib_CSharp.Windowing;
@@ -40,18 +39,8 @@ public class Game() : Application(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, TITLE)
     {
         Input.SetExitKey(KeyboardKey.Null);
 
+        //SceneManager.Instance.Push(new PerformanceTestScene());
         SceneManager.Instance.Push(new MenuScene());
-    }
-
-    protected override void Update(float dt)
-    {
-        SceneManager.Instance.Update(dt);
-    }
-
-    protected override void Draw()
-    {
-        Graphics.ClearBackground(Color.SkyBlue);
-        SceneManager.Instance.Draw();
     }
 
     protected override void BeforeDrawEnd()

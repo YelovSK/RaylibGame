@@ -1,3 +1,4 @@
+using Engine.Collections;
 using Engine.Components;
 using Engine.Enums;
 using Raylib_CSharp.Rendering;
@@ -17,12 +18,13 @@ public abstract class Scene
     private readonly HashSet<Entity> _entities = [];
     private readonly HashSet<CameraComponent> _cameras = [];
     
-    // Is around 50% faster when scene has a bunch of components.
+    // Micro performance optimization when many entities in a scene but they use only some of these.
     // Have to somehow keep it up to date which is annoying.
-    // Plus there is a bigger overhead when adding/removing components.
+    // Plus there is a bigger overhead when adding/removing components + memory usage.
     private readonly HashSet<IUpdatable> _updatables = [];
-    private readonly HashSet<IDrawable> _screenDrawables = [];
-    private readonly HashSet<IDrawable> _worldDrawables = [];
+    private readonly HashSet<IFixedUpdatable> _fixedUpdatables = [];
+    private readonly HashSet<ILateUpdatable> _lateUpdatables = [];
+    private readonly HashSet<IDrawable> _drawables = [];
     
     // Camera components register themselves.
     // Right now, only a single camera is used.
@@ -50,24 +52,40 @@ public abstract class Scene
         _entities.Add(entity);
         return entity;
     }
-
-    public virtual void Update(float dt)
+    
+    public void FixedUpdate()
+    {
+        foreach (var update in _fixedUpdatables)
+        {
+            update.FixedUpdate();
+        }
+    }
+    
+    public void Update(float dt)
     {
         foreach (var update in _updatables)
         {
             update.Update(dt);
         }
+    }
+    
+    public void LateUpdate(float dt)
+    {
+        foreach (var update in _lateUpdatables)
+        {
+            update.LateUpdate(dt);
+        }
         
         InternalDestroy();
     }
 
-    public void Draw()
+    public void Draw(float alpha)
     {
-        DrawWorldSpace();
-        DrawScreenSpace();
+        DrawWorldSpace(alpha);
+        DrawScreenSpace(alpha);
     }
     
-    public virtual void OnDestroy()
+    public void OnDestroy()
     {
         foreach (var entity in _entities)
         {
@@ -85,22 +103,24 @@ public abstract class Scene
 
     public void RegisterComponent<T>(T component) where T : Component
     {
-        if (component is IUpdatable updateable)
+        if (component is IUpdatable updatable)
         {
-            _updatables.Add(updateable);
+            _updatables.Add(updatable);
+        }
+        
+        if (component is IFixedUpdatable fixedUpdatable)
+        {
+            _fixedUpdatables.Add(fixedUpdatable);
+        }
+        
+        if (component is ILateUpdatable lateUpdatable)
+        {
+            _lateUpdatables.Add(lateUpdatable);
         }
         
         if (component is IDrawable drawable)
         {
-            switch (drawable.RenderSpace)
-            {
-                case RenderSpace.Screen:
-                    _screenDrawables.Add(drawable);
-                    break;
-                case RenderSpace.World:
-                    _worldDrawables.Add(drawable);
-                    break;
-            }
+            _drawables.Add(drawable);
         }
     }
     
@@ -114,16 +134,19 @@ public abstract class Scene
         _cameras.Remove(camera);
     }
     
-    private void DrawWorldSpace()
+    private void DrawWorldSpace(float alpha)
     {
         if (Camera != null)
         {
             Graphics.BeginMode2D(Camera.Camera);
         }
         
-        foreach (var draw in _worldDrawables)
+        foreach (var draw in _drawables)
         {
-            draw.Draw();
+            if (draw.RenderSpace == RenderSpace.World)
+            {
+                draw.Draw(alpha);
+            }
         }
         
         if (Camera != null)
@@ -132,11 +155,14 @@ public abstract class Scene
         }
     }
 
-    private void DrawScreenSpace()
+    private void DrawScreenSpace(float alpha)
     {
-        foreach (var draw in _screenDrawables)
+        foreach (var draw in _drawables)
         {
-            draw.Draw();
+            if (draw.RenderSpace == RenderSpace.Screen)
+            {
+                draw.Draw(alpha);
+            }
         }
     }
 
@@ -157,20 +183,22 @@ public abstract class Scene
             {
                 if (component is IDrawable drawable)
                 {
-                    switch (drawable.RenderSpace)
-                    {
-                        case RenderSpace.World:
-                            _worldDrawables.Remove(drawable);
-                            break;
-                        case RenderSpace.Screen:
-                            _screenDrawables.Remove(drawable);
-                            break;
-                    }
+                    _drawables.Remove(drawable);
                 }
             
                 if (component is IUpdatable updatable)
                 {
                     _updatables.Remove(updatable);
+                }
+                
+                if (component is IFixedUpdatable fixedUpdatable)
+                {
+                    _fixedUpdatables.Remove(fixedUpdatable);
+                }
+                
+                if (component is ILateUpdatable lateUpdatable)
+                {
+                    _lateUpdatables.Remove(lateUpdatable);
                 }
             
                 component.OnDestroy();

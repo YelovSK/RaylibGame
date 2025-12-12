@@ -1,4 +1,4 @@
-﻿namespace Engine;
+﻿namespace Engine.Collections;
 
 /// <summary>
 /// IReadOnlyList and ReadOnlyCollection cause allocations when using foreach because of boxing.

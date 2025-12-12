@@ -3,7 +3,9 @@ using Engine;
 using Engine.Components;
 using Engine.Extensions;
 using Engine.Helpers;
+using Game.Components;
 using Game.Persistence;
+using Raylib_CSharp.Colors;
 using Raylib_CSharp.Interact;
 using Raylib_CSharp.Windowing;
 
@@ -18,6 +20,14 @@ public class OptionsScene : Scene
     
     public override void Load()
     {
+        CreateEntity().AddComponent<OptionsSceneController>();
+        
+        var background = CreateEntity();
+        var backgroundSprite = background.AddComponent<SpriteComponent>();
+        backgroundSprite.Width = Application.Instance.VirtualWidth;
+        backgroundSprite.Height = Application.Instance.VirtualHeight;
+        backgroundSprite.Color = Color.SkyBlue;
+        
         // Vsync
         AddSetting("VSync", Settings.Instance.IsVsyncEnabled, (isChecked) =>
         {
@@ -71,15 +81,5 @@ public class OptionsScene : Scene
         checkbox.Size = SETTING_HEIGHT;
         
         _settingsCount++;
-    }
-
-    public override void Update(float dt)
-    {
-        base.Update(dt);
-
-        if (Input.IsKeyPressed(KeyboardKey.Escape))
-        {
-            SceneManager.Instance.Pop();
-        }
     }
 }

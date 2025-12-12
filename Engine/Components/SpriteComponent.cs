@@ -12,8 +12,8 @@ public class SpriteComponent : Component, IDrawable
     public int Width, Height;
     public Color Color;
 
-    public void Draw()
+    public void Draw(float alpha)
     {
-        Graphics.DrawRectangleV(Entity.Transform.Position, new Vector2(Width, Height), Color);
+        Graphics.DrawRectangleV(Entity.Transform.LocalRenderPosition, new Vector2(Width, Height), Color);
     }
 }
