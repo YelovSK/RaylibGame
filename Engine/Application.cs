@@ -50,13 +50,13 @@ public abstract class Application
     // Abstract
     protected abstract void BeforeWindowInit();
     protected abstract void AfterWindowInit();
-    protected virtual void Update(float dt) => SceneManager.Instance.Update(dt);
-    protected virtual void FixedUpdate() => SceneManager.Instance.FixedUpdate();
-    protected virtual void LateUpdate(float dt) => SceneManager.Instance.LateUpdate(dt);
-    protected virtual void Draw(float alpha)
+    protected virtual void Update(float dt) => WorldManager.Instance.Update(dt);
+    protected virtual void FixedUpdate() { }
+    protected virtual void LateUpdate(float dt) { }
+    protected virtual void Draw()
     {
         Graphics.ClearBackground(Color.Black);
-        SceneManager.Instance.Draw(alpha);
+        WorldManager.Instance.Draw();
     }
     /// <summary>
     /// Do the final drawing here.
@@ -117,11 +117,6 @@ public abstract class Application
                 accumulator += dt;
                 while (accumulator >= FixedTime.TICK_RATE)
                 {
-                    // TODO: this is absolutely stupid, remove.
-                    foreach (var entity in SceneManager.Instance.Current.Entities)
-                    {
-                        entity.Transform.SavePrevious();
-                    }
                     FixedUpdate();
                     FixedTime.Ticks++;
                     accumulator -= FixedTime.TICK_RATE;
@@ -131,18 +126,13 @@ public abstract class Application
                 
                 var updateEnd = Time.GetTime();
                 var alpha = (float)(accumulator / FixedTime.TICK_RATE);
-                // TODO: this is absolutely stupid, remove.
-                foreach (var entity in SceneManager.Instance.Current.Entities)
-                {
-                    entity.Transform.ComputeRenderState(alpha);
-                }
                 
                 UpdateTimeMs = (updateEnd - updateStart) * 1000;
 
                 // Draw in virtual resolution
                 var drawStart = Time.GetTime();
                 Graphics.BeginTextureMode(_virtualRenderTarget);
-                Draw(alpha);
+                Draw();
                 Graphics.EndTextureMode();
 
                 // Apply shaders to low res texture

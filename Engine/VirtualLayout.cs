@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using Engine.Enums;
 
-namespace Engine.Helpers;
+namespace Engine;
 
 public static class VirtualLayout
 {
