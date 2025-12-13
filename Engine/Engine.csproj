@@ -2,18 +2,21 @@
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
+        <IsAotCompatible>true</IsAotCompatible>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RootNamespace>Engine</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-      <EmbeddedResource Include="Shaders\*.vs" />
-      <EmbeddedResource Include="Shaders\*.fs" />
+      <PackageReference Include="Raylib-CSharp" Version="5.0.0" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Raylib-CSharp" Version="5.0.0" />
+        <ProjectReference Include="..\Engine.Generator\Engine.Generator.csproj" 
+                    OutputItemType="Analyzer"
+                    PrivateAssets="all"
+                    ReferenceOutputAssembly="false" />
     </ItemGroup>
 
 </Project>

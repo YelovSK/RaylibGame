@@ -23,7 +23,7 @@ jobs:
         run: dotnet restore
 
       - name: Publish
-        run: dotnet publish Game -c Release -r win-x64 -p:PublishAot=true --self-contained true -p:DebugSymbols=false
+        run: dotnet publish Game -c Release -r win-x64 --self-contained true -p:DebugSymbols=false
 
       - name: Zip build
         run: |
