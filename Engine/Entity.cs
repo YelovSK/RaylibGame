@@ -1,8 +1,8 @@
 ﻿namespace Engine;
 
-public readonly struct Entity(uint id)
+public readonly struct Entity(int id)
 {
-    public readonly uint Id = id;
+    public readonly int Id = id;
 
     public override string ToString() => $"Entity({Id})";
 }

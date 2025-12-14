@@ -35,10 +35,10 @@ public sealed class SparseSet<T> : IComponentPool where T : struct
     public IReadOnlyList<Entity> DenseEntities => _denseToEntity;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int PageOf(uint id) => (int)(id >> 10); // 1024
-    
+    private static int PageOf(int id) => id / 1024;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int LocalOf(uint id) => (int)(id & 0x3FF); // % 1024
+    private static int LocalOf(int id) => id % SparsePageSize;
 
     private void EnsurePage(int page)
     {
@@ -50,7 +50,7 @@ public sealed class SparseSet<T> : IComponentPool where T : struct
         }
     }
 
-    private void SetDenseIndex(uint id, int denseIndex)
+    private void SetDenseIndex(int id, int denseIndex)
     {
         var page = PageOf(id);
         var local = LocalOf(id);
@@ -60,16 +60,15 @@ public sealed class SparseSet<T> : IComponentPool where T : struct
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int GetDenseIndex(uint id)
+    public int GetDenseIndex(int id)
     {
         var page = PageOf(id);
         var local = LocalOf(id);
-
         return page >= _sparsePages.Count
             ? Tombstone
             : _sparsePages[page][local];
     }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Contains(Entity e) => GetDenseIndex(e.Id) != Tombstone;
 

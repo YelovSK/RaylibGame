@@ -1,6 +1,6 @@
 ﻿using Engine.Components;
 
-namespace Engine.Systems;
+namespace Engine.Systems.Update;
 
 public class ActionSystem : ISystem
 {

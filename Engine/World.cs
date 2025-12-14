@@ -1,13 +1,12 @@
-﻿using Raylib_CSharp.Textures;
-
-namespace Engine;
+﻿namespace Engine;
 
 public partial class World
 {
-    private uint _nextEntityId = 1;
+    private int _nextEntityId = 1;
     private readonly Dictionary<Type, IComponentPool> _componentPools = new();
-    private readonly List<ISystem> _systems = [];
-    private readonly List<IRenderSystem> _renderSystems = [];
+    private List<ISystem> _systems = [];
+    private List<IPhysicsSystem> _physicsSystems = [];
+    private List<IRenderSystem> _renderSystems = [];
     
     public Entity CreateEntity()
     {
@@ -37,19 +36,39 @@ public partial class World
         return GetPool<T>().Contains(e);
     }
     
-    public void AddSystem(ISystem system)
+    public void AddSystem<T>() where T : ISystem, new()
     {
-        _systems.Add(system);
+        _systems.Add(new T());
     }
     
-    public void AddRenderSystem(IRenderSystem system)
+    public void AddPhysicsSystem<T>() where T : IPhysicsSystem, new()
     {
-        _renderSystems.Add(system);
+        _physicsSystems.Add(new T());
+    }
+    
+    public void AddRenderSystem<T>() where T : IRenderSystem, new()
+    {
+        _renderSystems.Add(new T());
+    }
+
+    public void CompileSystems()
+    {
+        _systems = SystemScheduler.Build(_systems);
+        _physicsSystems = SystemScheduler.Build(_physicsSystems);
+        _renderSystems = SystemScheduler.Build(_renderSystems);
     }
     
     public void Update(float dt)
     {
         foreach (var system in _systems)
+        {
+            system.Update(this, dt);
+        }
+    }
+    
+    public void PhysicsUpdate(float dt)
+    {
+        foreach (var system in _physicsSystems)
         {
             system.Update(this, dt);
         }

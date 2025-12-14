@@ -50,13 +50,13 @@ public abstract class Application
     // Abstract
     protected abstract void BeforeWindowInit();
     protected abstract void AfterWindowInit();
-    protected virtual void Update(float dt) => WorldManager.Instance.Update(dt);
-    protected virtual void FixedUpdate() { }
+    protected virtual void Update(float dt) => SceneManager.Instance.Update(dt);
+    protected virtual void FixedUpdate(float dt) => SceneManager.Instance.FixedUpdate(dt);
     protected virtual void LateUpdate(float dt) { }
     protected virtual void Draw()
     {
         Graphics.ClearBackground(Color.Black);
-        WorldManager.Instance.Draw();
+        SceneManager.Instance.Draw();
     }
     /// <summary>
     /// Do the final drawing here.
@@ -117,7 +117,7 @@ public abstract class Application
                 accumulator += dt;
                 while (accumulator >= FixedTime.TICK_RATE)
                 {
-                    FixedUpdate();
+                    FixedUpdate((float)FixedTime.TICK_RATE);
                     FixedTime.Ticks++;
                     accumulator -= FixedTime.TICK_RATE;
                 }

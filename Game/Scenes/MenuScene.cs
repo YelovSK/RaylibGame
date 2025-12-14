@@ -3,54 +3,21 @@ using Engine;
 using Engine.Components;
 using Engine.Enums;
 using Engine.Systems;
+using Engine.Systems.Render;
+using Engine.Systems.Update;
 using Raylib_CSharp.Colors;
 
-namespace Game;
+namespace Game.Scenes;
 
-class SimpleMovementSystem : ISystem
-{
-    public void Update(World world, float dt)
-    {
-        world.View<TransformComponent, SpriteComponent, ButtonComponent>().ForEach((_, ref transform, ref _, ref _) =>
-        {
-            transform.Position.X += 10 * dt;
-        });
-    }
-}
-
-public static class WorldsFactory
+public class MenuScene : Scene
 {
     private static readonly float BUTTON_WIDTH = Application.Instance.VirtualWidth * 0.2f;
     private static readonly float BUTTON_HEIGHT = Application.Instance.VirtualHeight * 0.1f;
-
-    public static World CreatePerformanceTest()
-    {
-        var world = new World();
-
-        for (int i = 0; i < 10_000; i++)
-        {
-            var entity = world.CreateEntity();
-            world.AddComponent(entity, new TransformComponent());
-            world.AddComponent(entity, new ButtonComponent());
-            world.AddComponent(entity, new SpriteComponent()
-            {
-                Size = new Vector2(50, 50),
-                Color = Color.Red
-            });
-        }
-
-        world.AddSystem(new SimpleMovementSystem());
-        world.AddRenderSystem(new SpriteRenderSystem());
-
-        return world;
-    }
     
-    public static World CreateMenu()
+    protected override void Load(World world)
     {
         var middle = VirtualLayout.AnchorToScreen((int)BUTTON_WIDTH, (int)BUTTON_HEIGHT, Anchor.Center); 
         var buttonOffset = BUTTON_HEIGHT * 1.2f; 
-        
-        var world = new World();
         
         // Background
         var background = world.CreateEntity();
@@ -67,24 +34,24 @@ public static class WorldsFactory
         // Buttons
         AddButton(world, "Play", middle.Y - buttonOffset, () =>
         {
-            
+            SceneManager.Instance.Load(new GameScene());
         });
         
         AddButton(world, "Options", middle.Y, () =>
         {
-            
+            SceneManager.Instance.Load(new OptionsScene());
         });
         
         AddButton(world, "Quit", middle.Y + buttonOffset, () =>
         {
-            
+            Application.Instance.Close();
         });
 
-        world.AddRenderSystem(new SpriteRenderSystem());
-        world.AddSystem(new ButtonInputSystem());
-        world.AddRenderSystem(new ButtonRenderSystem());
-
-        return world;
+        world.AddSystem<UiPointerSystem>();
+        world.AddSystem<ButtonTiltSystem>();
+        world.AddRenderSystem<SpriteRenderSystem>();
+        world.AddRenderSystem<ButtonRenderSystem>();
+        world.AddRenderSystem<ButtonLabelRenderSystem>();
     }
     
     private static void AddButton(World world, string text, float y, Action action)
@@ -92,21 +59,31 @@ public static class WorldsFactory
         var middle = VirtualLayout.Center(BUTTON_WIDTH, 0); 
         
         var button = world.CreateEntity();
-        world.AddComponent(button, new TransformComponent()
+        world.AddComponent(button, new RectTransform()
         {
-            Position = middle with { Y = y }
-        });
-        world.AddComponent(button, new ButtonComponent
-        {
-            Text = text,
-            FontSize = (int)(0.04f * Application.Instance.VirtualWidth),
+            Position = middle with { Y = y },
             Size = new Vector2(BUTTON_WIDTH, BUTTON_HEIGHT),
+        });
+        
+        world.AddComponent(button, new ButtonStyleComponent()
+        {
             StrokeWidth = BUTTON_HEIGHT * 0.06f,
             NormalColor = Color.DarkGray,
             HoverColor = Color.Gray,
             PressedColor = Color.LightGray,
-            TextColor = Color.White,
         });
-        world.AddComponent(button, new ButtonStateComponent());
+        
+        world.AddComponent(button, new LabelComponent()
+        {
+            Text = text,
+            TextColor = Color.White,
+            FontSize = 20,
+        });
+
+        world.AddComponent(button, new UiPointerStateComponent()
+        {
+            Action = action,
+        });
+        world.AddComponent(button, new ButtonVisualStateComponent());
     }
 }

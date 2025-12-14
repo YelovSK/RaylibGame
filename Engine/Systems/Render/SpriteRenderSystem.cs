@@ -1,7 +1,8 @@
 ﻿using Engine.Components;
 using Raylib_CSharp.Rendering;
 
-namespace Engine.Systems;
+namespace Engine.Systems.Render;
+
 public sealed class SpriteRenderSystem : IRenderSystem
 {
     public void Draw(World world)
