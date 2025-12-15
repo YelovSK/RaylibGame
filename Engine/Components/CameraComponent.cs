@@ -6,13 +6,13 @@ namespace Engine.Components;
 
 public class CameraComponent : Component, ILateUpdatable
 {
-    public Camera2D Camera = new();
+    public Camera2D Camera;
     public Entity? Target { get; set; }
     public float FollowSpeed = 7f;
 
     public CameraComponent()
     {
-        Camera.Offset = VirtualLayout.Center(0f, 0f);
+        Camera.Offset = VirtualLayout.Center();
         Camera.Zoom = 1f;
     }
 
@@ -27,11 +27,8 @@ public class CameraComponent : Component, ILateUpdatable
         {
             return;
         }
-        
-        var currentTarget = Camera.Target;
-        var desiredTarget = Target.Transform.Position;
 
-        var newTarget = Vector2.Lerp(currentTarget, desiredTarget, FollowSpeed * dt);
+        var newTarget = Vector2.Lerp(Camera.Target, Target.Transform.RenderPosition, FollowSpeed * dt);
 
         Camera.Target = newTarget;
     }

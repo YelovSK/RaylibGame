@@ -55,7 +55,7 @@ public class CheckboxComponent : Component, IUpdatable, IDrawable
         }
     }
 
-    public void Draw(float alpha)
+    public void Draw()
     {
         var pos = Entity.Transform.Position;
 

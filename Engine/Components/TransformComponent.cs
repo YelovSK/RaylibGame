@@ -3,7 +3,7 @@ using Engine.Collections;
 
 namespace Engine.Components;
 
-public class TransformComponent : Component
+public class TransformComponent : Component, IInterpolatable
 {
     private readonly List<TransformComponent> _children = [];
     public ReadOnlyCollections<TransformComponent> Children => new(_children);
@@ -12,18 +12,27 @@ public class TransformComponent : Component
     private Matrix4x4 _worldMatrix;
     private bool _isDirty = true;
 
-    // Local
+    // Interpolation state
+    private Vector2 _previousLocalPosition;
+    private float _previousLocalRotation;
     
-    public Vector2 PreviousLocalPosition;
-    public Vector2 LocalRenderPosition;
+    /// <summary>
+    /// Interpolated position for rendering. Only valid during Draw phase.
+    /// </summary>
+    public Vector2 RenderPosition { get; private set; }
+    
+    /// <summary>
+    /// Interpolated rotation for rendering. Only valid during Draw phase.
+    /// </summary>
+    public float RenderRotation { get; private set; }
+
+    // Local transform
     public Vector2 LocalPosition
     {
         get;
         set { field = value; SetDirty(); }
     }
 
-    public float PreviousLocalRotation;
-    public float LocalRenderRotation;
     public float LocalRotation
     {
         get;
@@ -36,7 +45,7 @@ public class TransformComponent : Component
         set { field = value; SetDirty(); }
     }
     
-    // World
+    // World transform
     public TransformComponent? Parent
     {
         get;
@@ -138,18 +147,21 @@ public class TransformComponent : Component
         return _worldMatrix;
     }
     
-    public void SavePrevious()
+    // IInterpolatable implementation
+    public void SavePreviousState()
     {
-        PreviousLocalPosition = Position;
-        PreviousLocalRotation = Rotation;
+        _previousLocalPosition = Position;
+        _previousLocalRotation = Rotation;
     }
 
     public void ComputeRenderState(float alpha)
     {
-        LocalRenderPosition = Vector2.Lerp(PreviousLocalPosition, Position, alpha);
-        LocalRenderRotation = LerpAngle(PreviousLocalRotation, Rotation, alpha);
+        RenderPosition = Vector2.Lerp(_previousLocalPosition, Position, alpha);
+        RenderRotation = LerpAngle(_previousLocalRotation, Rotation, alpha);
+        Console.WriteLine("Computing");
     }
-        private static float LerpAngle(float a, float b, float t)
+    
+    private static float LerpAngle(float a, float b, float t)
     {
         // shortest-path lerp for angles (radians). Adjust if you use degrees.
         float diff = WrapAngle(b - a);

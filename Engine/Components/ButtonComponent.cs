@@ -92,7 +92,7 @@ public class ButtonComponent : Component, IUpdatable, IDrawable
         _currentTiltY = RayMath.Lerp(_currentTiltY, targetTiltY, TILT_SPEED * dt);
     }
     
-    public void Draw(float alpha)
+    public void Draw()
     {
         var color = GetBackgroundColor();
         

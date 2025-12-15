@@ -117,11 +117,6 @@ public abstract class Application
                 accumulator += dt;
                 while (accumulator >= FixedTime.TICK_RATE)
                 {
-                    // TODO: this is absolutely stupid, remove.
-                    foreach (var entity in SceneManager.Instance.Current.Entities)
-                    {
-                        entity.Transform.SavePrevious();
-                    }
                     FixedUpdate();
                     FixedTime.Ticks++;
                     accumulator -= FixedTime.TICK_RATE;
@@ -131,11 +126,6 @@ public abstract class Application
                 
                 var updateEnd = Time.GetTime();
                 var alpha = (float)(accumulator / FixedTime.TICK_RATE);
-                // TODO: this is absolutely stupid, remove.
-                foreach (var entity in SceneManager.Instance.Current.Entities)
-                {
-                    entity.Transform.ComputeRenderState(alpha);
-                }
                 
                 UpdateTimeMs = (updateEnd - updateStart) * 1000;
 

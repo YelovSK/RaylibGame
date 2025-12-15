@@ -25,6 +25,7 @@ public abstract class Scene
     private readonly HashSet<IFixedUpdatable> _fixedUpdatables = [];
     private readonly HashSet<ILateUpdatable> _lateUpdatables = [];
     private readonly HashSet<IDrawable> _drawables = [];
+    private readonly HashSet<IInterpolatable> _interpolatables = [];
     
     // Camera components register themselves.
     // Right now, only a single camera is used.
@@ -55,6 +56,12 @@ public abstract class Scene
     
     public void FixedUpdate()
     {
+        // Save state before physics for interpolation
+        foreach (var interpolatable in _interpolatables)
+        {
+            interpolatable.SavePreviousState();
+        }
+        
         foreach (var update in _fixedUpdatables)
         {
             update.FixedUpdate();
@@ -81,8 +88,13 @@ public abstract class Scene
 
     public void Draw(float alpha)
     {
-        DrawWorldSpace(alpha);
-        DrawScreenSpace(alpha);
+        foreach (var interpolatable in _interpolatables)
+        {
+            interpolatable.ComputeRenderState(alpha);
+        }
+        
+        DrawWorldSpace();
+        DrawScreenSpace();
     }
     
     public void OnDestroy()
@@ -122,6 +134,11 @@ public abstract class Scene
         {
             _drawables.Add(drawable);
         }
+        
+        if (component is IInterpolatable interpolatable)
+        {
+            _interpolatables.Add(interpolatable);
+        }
     }
     
     public void RegisterCamera(CameraComponent camera)
@@ -134,7 +151,7 @@ public abstract class Scene
         _cameras.Remove(camera);
     }
     
-    private void DrawWorldSpace(float alpha)
+    private void DrawWorldSpace()
     {
         if (Camera != null)
         {
@@ -145,7 +162,7 @@ public abstract class Scene
         {
             if (draw.RenderSpace == RenderSpace.World)
             {
-                draw.Draw(alpha);
+                draw.Draw();
             }
         }
         
@@ -155,13 +172,13 @@ public abstract class Scene
         }
     }
 
-    private void DrawScreenSpace(float alpha)
+    private void DrawScreenSpace()
     {
         foreach (var draw in _drawables)
         {
             if (draw.RenderSpace == RenderSpace.Screen)
             {
-                draw.Draw(alpha);
+                draw.Draw();
             }
         }
     }
@@ -199,6 +216,11 @@ public abstract class Scene
                 if (component is ILateUpdatable lateUpdatable)
                 {
                     _lateUpdatables.Remove(lateUpdatable);
+                }
+                
+                if (component is IInterpolatable interpolatable)
+                {
+                    _interpolatables.Remove(interpolatable);
                 }
             
                 component.OnDestroy();

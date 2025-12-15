@@ -24,7 +24,26 @@ public interface IDrawable
     /// </summary>
     public RenderSpace RenderSpace { get; set; }
     
-    void Draw(float alpha);
+    void Draw();
+}
+
+/// <summary>
+/// Components that need smooth rendering between fixed timestep physics updates.
+/// SavePreviousState is called before each FixedUpdate.
+/// ComputeRenderState is called before Draw with interpolation alpha (0-1).
+/// </summary>
+public interface IInterpolatable
+{
+    /// <summary>
+    /// Called before FixedUpdate to save the current state for interpolation.
+    /// </summary>
+    void SavePreviousState();
+    
+    /// <summary>
+    /// Called before Draw to compute the interpolated render state.
+    /// </summary>
+    /// <param name="alpha">Interpolation factor between previous (0) and current (1) state</param>
+    void ComputeRenderState(float alpha);
 }
 
 public abstract class Component

@@ -24,7 +24,7 @@ public class GameScene : Scene
         backgroundA.Transform.Position = new Vector2(-1000, -1000);
         background.Width = 2000;
         background.Height = 2000;
-        background.Color = Color.DarkGray;
+        background.Color = Color.SkyBlue;
         
         // Create player
         _player = CreateEntity();

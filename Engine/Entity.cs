@@ -10,14 +10,13 @@ public class Entity
 {
     public readonly TransformComponent Transform;
     public readonly Scene Scene;
-    private readonly List<Component> _components;
+    private readonly List<Component> _components = [];
     public ReadOnlyCollections<Component> Components => new(_components);
 
     internal Entity(Scene scene)
     {
         Scene = scene;
-        Transform = new TransformComponent { Entity = this };
-        _components = [Transform];
+        Transform = AddComponent<TransformComponent>();
     }
 
     public T AddComponent<T>() where T : Component, new()
