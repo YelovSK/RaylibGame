@@ -5,6 +5,9 @@ using Raylib_CSharp.Rendering;
 
 namespace Engine.Components;
 
+/// <summary>
+/// World-space rectangle.
+/// </summary>
 public class SpriteComponent : Component, IDrawable
 {
     public RenderSpace RenderSpace { get; set; } = RenderSpace.World;

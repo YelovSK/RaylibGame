@@ -22,7 +22,7 @@ public interface IDrawable
     /// <summary>
     /// Uses Camera2D if set to <see cref="RenderSpace.World"/> and a camera is present in a scene.
     /// </summary>
-    public RenderSpace RenderSpace { get; set; }
+    RenderSpace RenderSpace { get; set; }
     
     void Draw();
 }
@@ -63,6 +63,6 @@ public abstract class Component
     }
     
     public T? GetComponent<T>() where T : Component => Entity.GetComponent<T>();
-    
+
     public IEnumerable<T> GetComponents<T>() where T : Component => Entity.GetComponents<T>();
 }

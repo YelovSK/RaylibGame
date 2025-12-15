@@ -2,7 +2,6 @@ using System.Numerics;
 using Engine.Enums;
 using Engine.Extensions;
 using Raylib_CSharp;
-using Raylib_CSharp.Collision;
 using Raylib_CSharp.Colors;
 using Raylib_CSharp.Fonts;
 using Raylib_CSharp.Interact;
@@ -17,7 +16,6 @@ public class ButtonComponent : Component, IUpdatable, IDrawable
     
     public string Text;
     public int FontSize = 20;
-    public Vector2 Size;
     public float StrokeWidth = 2f;
     public Color NormalColor = Color.DarkGray;
     public Color HoverColor = Color.Gray;
@@ -26,9 +24,6 @@ public class ButtonComponent : Component, IUpdatable, IDrawable
     
     public Action? OnClick;
 
-    private bool _isHovered;
-    private bool _wasPressed;
-
     private float _currentTiltX;
     private float _currentTiltY;
     
@@ -36,33 +31,27 @@ public class ButtonComponent : Component, IUpdatable, IDrawable
     private const float TILT_SPEED = 10f;
     private const float FOV = 100f;
 
+    private GuiInteractableComponent? _guiInteractableComponent;
+    private RectTransform? _rectTransform;
+
+    public override void Start()
+    {
+        _guiInteractableComponent = GetComponent<GuiInteractableComponent>();
+        _rectTransform = GetComponent<RectTransform>();
+    }
+
     public void Update(float dt)
     {
-        var mousePos = Input.GetVirtualMousePosition();
-        var bounds = new Rectangle(
-            Entity.Transform.Position.X,
-            Entity.Transform.Position.Y,
-            Size.X,
-            Size.Y
-        );
-
-        _isHovered = ShapeHelper.CheckCollisionPointRec(mousePos, bounds);
-        
-        HandleTilt(dt, bounds, mousePos);
-
-        if (_isHovered && Input.IsMouseButtonPressed(MouseButton.Left))
+        if (_rectTransform is null || _guiInteractableComponent is null)
         {
-            _wasPressed = true;
+            return;
         }
+        
+        HandleTilt(dt, _rectTransform.Rectangle, Input.GetVirtualMousePosition());
 
-        if (_wasPressed && Input.IsMouseButtonReleased(MouseButton.Left))
+        if (_guiInteractableComponent.IsClicked)
         {
-            if (_isHovered)
-            {
-                OnClick?.Invoke();
-            }
-
-            _wasPressed = false;
+            OnClick?.Invoke();
         }
     }
 
@@ -74,15 +63,15 @@ public class ButtonComponent : Component, IUpdatable, IDrawable
         float targetTiltX;
         float targetTiltY;
         
-        if (!_isHovered)
+        if (!_guiInteractableComponent?.IsHovered ?? false)
         {
             targetTiltX = 0;
             targetTiltY = 0;
         }
         else
         {
-            var normalizedX = Math.Clamp(offset.X / (Size.X / 2), -1f, 1f);
-            var normalizedY = Math.Clamp(offset.Y / (Size.Y / 2), -1f, 1f);
+            var normalizedX = Math.Clamp(offset.X / (_rectTransform!.Rectangle.Width / 2), -1f, 1f);
+            var normalizedY = Math.Clamp(offset.Y / (_rectTransform!.Rectangle.Height / 2), -1f, 1f);
         
             targetTiltX = -normalizedY * MAX_TILT_DEGREES;
             targetTiltY = normalizedX * MAX_TILT_DEGREES;
@@ -94,15 +83,21 @@ public class ButtonComponent : Component, IUpdatable, IDrawable
     
     public void Draw()
     {
-        var color = GetBackgroundColor();
+        var color = _guiInteractableComponent?.State switch
+        {
+            InteractableState.Normal => NormalColor,
+            InteractableState.Hoverered => HoverColor,
+            InteractableState.Pressed => PressedColor,
+            _ => NormalColor,
+        };
         
         // Tilt the button in 3D space and project it into 2D
         Span<Vector3> corners =
         [
-            new(-Size.X/2, -Size.Y/2, 0),
-            new( Size.X/2, -Size.Y/2, 0),
-            new(-Size.X/2,  Size.Y/2, 0),
-            new( Size.X/2,  Size.Y/2, 0),
+            new(-_rectTransform.Rectangle.Width/2, -_rectTransform.Rectangle.Height/2, 0),
+            new( _rectTransform.Rectangle.Width/2, -_rectTransform.Rectangle.Height/2, 0),
+            new(-_rectTransform.Rectangle.Width/2,  _rectTransform.Rectangle.Height/2, 0),
+            new( _rectTransform.Rectangle.Width/2,  _rectTransform.Rectangle.Height/2, 0),
         ];
         
         var tiltXRad = _currentTiltX * RayMath.Deg2Rad;
@@ -122,7 +117,7 @@ public class ButtonComponent : Component, IUpdatable, IDrawable
             );
         }
 
-        var center = Entity.Transform.Position + (Size / 2);
+        var center = _rectTransform.Rectangle.Center();
         
         // TODO: i think this could be a helper
         Span<Vector2> projected = stackalloc Vector2[4];
@@ -145,32 +140,17 @@ public class ButtonComponent : Component, IUpdatable, IDrawable
         // Text
         var textSize = TextManager.MeasureText(Text, FontSize);
         var textPos = new Vector2(
-            Entity.Transform.Position.X + (Size.X - textSize) / 2,
-            Entity.Transform.Position.Y + (Size.Y - FontSize) / 2
+            _rectTransform.Rectangle.X + (_rectTransform.Rectangle.Width - textSize) / 2,
+            _rectTransform.Rectangle.Y + (_rectTransform.Rectangle.Height - FontSize) / 2
         );
 
         // Bounce on it crazy style
-        if (_isHovered)
+        if (_guiInteractableComponent?.IsHovered ?? false)
         {
             var sin = Math.Sin(2 * Math.PI * Time.GetTime());
             textPos.Y += (float)(sin * Application.Instance.VirtualHeight * 0.01f);
         }
         
         Graphics.DrawText(Text, (int)textPos.X, (int)textPos.Y, FontSize, TextColor);
-    }
-
-    private Color GetBackgroundColor()
-    {
-        if (_wasPressed && _isHovered)
-        {
-            return PressedColor;
-        }
-        
-        if (_isHovered)
-        {
-            return HoverColor;
-        }
-
-        return NormalColor;
     }
 }

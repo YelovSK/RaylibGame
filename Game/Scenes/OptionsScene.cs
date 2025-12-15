@@ -7,6 +7,7 @@ using Game.Components;
 using Game.Persistence;
 using Raylib_CSharp.Colors;
 using Raylib_CSharp.Interact;
+using Raylib_CSharp.Transformations;
 using Raylib_CSharp.Windowing;
 
 namespace Game.Scenes;
@@ -74,11 +75,13 @@ public class OptionsScene : Scene
         textGo.Transform.Position -= Vector2.X(textComponent.TextSize() + SETTING_HEIGHT * 0.7f);
 
         var go = CreateEntity();
-        go.Transform.Position = middle;
+        go.AddComponent<GuiInteractableComponent>();
+        var rectTransform = go.AddComponent<RectTransform>();
+        rectTransform.Rectangle.Position = middle;
+        rectTransform.Rectangle.Size = new Vector2(SETTING_HEIGHT, SETTING_HEIGHT);
         var checkbox = go.AddComponent<CheckboxComponent>();
         checkbox.IsChecked = defaultValue;
         checkbox.OnClick = setter;
-        checkbox.Size = SETTING_HEIGHT;
         
         _settingsCount++;
     }

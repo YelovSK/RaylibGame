@@ -4,6 +4,7 @@ using Engine.Components;
 using Engine.Enums;
 using Engine.Helpers;
 using Raylib_CSharp.Colors;
+using Raylib_CSharp.Transformations;
 
 namespace Game.Scenes;
 
@@ -49,12 +50,15 @@ public class MenuScene : Scene
         var middle = VirtualLayout.Center(BUTTON_WIDTH, 0);
 
         var buttonObject = CreateEntity();
-        buttonObject.Transform.Position = middle with { Y = y };
+        buttonObject.AddComponent<GuiInteractableComponent>();
         var button = buttonObject.AddComponent<ButtonComponent>();
         button.Text = text;
         button.FontSize = (int)(0.04f * Application.Instance.VirtualWidth);
-        button.Size = new Vector2(BUTTON_WIDTH, BUTTON_HEIGHT);
         button.RenderSpace = RenderSpace.Screen;
+
+        var transform = buttonObject.AddComponent<RectTransform>();
+        transform.Rectangle.Position = middle with { Y = y };
+        transform.Rectangle.Size = new Vector2(BUTTON_WIDTH, BUTTON_HEIGHT);
         
         return button;
     }
