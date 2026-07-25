@@ -64,11 +64,6 @@ public abstract class Application
     {
         _closeRequested = false;
 
-        AppDomain.CurrentDomain.ProcessExit += (_, _) =>
-        {
-            OnExit();
-        };
-
         BeforeWindowInit();
 
         Window.Init(Window.GetScreenWidth(), Window.GetScreenHeight(), Title);
@@ -87,85 +82,87 @@ public abstract class Application
         );
         _postProcessor = new PostProcessor(Window.GetScreenWidth(), Window.GetScreenHeight(), GetShaders(), TextureFilter.Bilinear);
 
-        AfterWindowInit();
-
-        double accumulator = 0;
-        while (!Window.ShouldClose() && !_closeRequested)
+        try
         {
-            try
+            AfterWindowInit();
+
+            double accumulator = 0;
+            while (!Window.ShouldClose() && !_closeRequested)
             {
-                if (Window.IsResized())
+                try
                 {
-                    OnWindowResized();
+                    if (Window.IsResized())
+                    {
+                        OnWindowResized();
+                    }
+
+                    var dt = Time.GetFrameTime();
+
+                    // Update
+                    var updateStart = Time.GetTime();
+                    InputManager.Instance.Gather();
+                    Update(dt);
+
+                    // Fixed update
+                    accumulator += dt;
+                    while (accumulator >= FixedTime.TICK_RATE)
+                    {
+                        FixedUpdate();
+                        FixedTime.Ticks++;
+                        accumulator -= FixedTime.TICK_RATE;
+                    }
+
+                    SceneManager.Instance.EndFrame();
+
+                    var updateEnd = Time.GetTime();
+                    var alpha = (float)(accumulator / FixedTime.TICK_RATE);
+
+                    UpdateTimeMs = (updateEnd - updateStart) * 1000;
+
+                    // Draw in virtual resolution
+                    var drawStart = Time.GetTime();
+                    Graphics.BeginTextureMode(_virtualRenderTarget);
+                    Draw(alpha, dt);
+                    Graphics.EndTextureMode();
+
+                    // Apply shaders to low res texture
+                    var virtualRenderTargetPp = _virtualPostProcessor.Apply(_virtualRenderTarget.Texture);
+
+                    // Scale virtual res texture up
+                    Graphics.BeginTextureMode(_renderTarget);
+                    BlitToScreen(virtualRenderTargetPp);
+                    Graphics.EndTextureMode();
+
+                    // Apply shaders to full res texture
+                    var renderTargetPp = _postProcessor.Apply(_renderTarget.Texture);
+
+                    Graphics.BeginDrawing();
+                    Graphics.ClearBackground(Color.Black);
+                    Graphics.DrawTexturePro(
+                        renderTargetPp,
+                        new Rectangle(0, 0, Window.GetScreenWidth(), -Window.GetScreenHeight()),
+                        new Rectangle(0, 0, Window.GetScreenWidth(), Window.GetScreenHeight()),
+                        Vector2.Zero,
+                        0.0f,
+                        Color.White
+                    );
+                    BeforeDrawEnd();
+                    Graphics.EndDrawing();
+
+                    var drawEnd = Time.GetTime();
+                    DrawTimeMs = (drawEnd - drawStart) * 1000;
                 }
-
-                var dt = Time.GetFrameTime();
-
-                // Update
-                var updateStart = Time.GetTime();
-                InputManager.Instance.Gather();
-                Update(dt);
-
-                // Fixed update
-                accumulator += dt;
-                while (accumulator >= FixedTime.TICK_RATE)
+                catch (Exception e)
                 {
-                    FixedUpdate();
-                    FixedTime.Ticks++;
-                    accumulator -= FixedTime.TICK_RATE;
+                    if (OnException(e)) throw;
                 }
-
-                SceneManager.Instance.EndFrame();
-
-                var updateEnd = Time.GetTime();
-                var alpha = (float)(accumulator / FixedTime.TICK_RATE);
-
-                UpdateTimeMs = (updateEnd - updateStart) * 1000;
-
-                // Draw in virtual resolution
-                var drawStart = Time.GetTime();
-                Graphics.BeginTextureMode(_virtualRenderTarget);
-                Draw(alpha, dt);
-                Graphics.EndTextureMode();
-
-                // Apply shaders to low res texture
-                var virtualRenderTargetPp = _virtualPostProcessor.Apply(_virtualRenderTarget.Texture);
-
-                // Scale virtual res texture up
-                Graphics.BeginTextureMode(_renderTarget);
-                BlitToScreen(virtualRenderTargetPp);
-                Graphics.EndTextureMode();
-
-                // Apply shaders to full res texture
-                var renderTargetPp = _postProcessor.Apply(_renderTarget.Texture);
-
-                Graphics.BeginDrawing();
-                Graphics.ClearBackground(Color.Black);
-                Graphics.DrawTexturePro(
-                    renderTargetPp,
-                    new Rectangle(0, 0, Window.GetScreenWidth(), -Window.GetScreenHeight()),
-                    new Rectangle(0, 0, Window.GetScreenWidth(), Window.GetScreenHeight()),
-                    Vector2.Zero,
-                    0.0f,
-                    Color.White
-                );
-                BeforeDrawEnd();
-                Graphics.EndDrawing();
-
-                // Scale up
-                var drawEnd = Time.GetTime();
-                DrawTimeMs = (drawEnd - drawStart) * 1000;
-            }
-            catch (Exception e)
-            {
-                if (OnException(e)) throw;
             }
         }
-
-        // Cleanup
-        _renderTarget.Unload();
-        _virtualRenderTarget.Unload();
-        Window.Close();
+        finally
+        {
+            OnExit();
+            Window.Close();
+        }
     }
 
     private void OnWindowResized()
