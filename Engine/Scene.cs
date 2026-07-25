@@ -23,9 +23,7 @@ public abstract class Scene
     // Plus there is a bigger overhead when adding/removing components + memory usage.
     private readonly HashSet<IUpdatable> _updatables = [];
     private readonly HashSet<IFixedUpdatable> _fixedUpdatables = [];
-    private readonly HashSet<ILateUpdatable> _lateUpdatables = [];
     private readonly HashSet<IDrawable> _drawables = [];
-    private readonly HashSet<IInterpolatable> _interpolatables = [];
     
     // Camera components register themselves.
     // Right now, only a single camera is used.
@@ -57,9 +55,9 @@ public abstract class Scene
     public void FixedUpdate()
     {
         // Save state before physics for interpolation
-        foreach (var interpolatable in _interpolatables)
+        foreach (var entity in _entities)
         {
-            interpolatable.SavePreviousState();
+            entity.Transform.SavePreviousState();
         }
         
         foreach (var update in _fixedUpdatables)
@@ -75,23 +73,17 @@ public abstract class Scene
             update.Update(dt);
         }
     }
-    
-    public void LateUpdate(float dt)
-    {
-        foreach (var update in _lateUpdatables)
-        {
-            update.LateUpdate(dt);
-        }
-        
-        InternalDestroy();
-    }
 
-    public void Draw(float alpha)
+    internal void EndFrame() => InternalDestroy();
+
+    public void Draw(float alpha, float dt)
     {
-        foreach (var interpolatable in _interpolatables)
+        foreach (var entity in _entities)
         {
-            interpolatable.ComputeRenderState(alpha);
+            entity.Transform.ComputeRenderState(alpha);
         }
+
+        Camera?.PrepareForDraw(dt);
         
         DrawWorldSpace();
         DrawScreenSpace();
@@ -125,19 +117,9 @@ public abstract class Scene
             _fixedUpdatables.Add(fixedUpdatable);
         }
         
-        if (component is ILateUpdatable lateUpdatable)
-        {
-            _lateUpdatables.Add(lateUpdatable);
-        }
-        
         if (component is IDrawable drawable)
         {
             _drawables.Add(drawable);
-        }
-        
-        if (component is IInterpolatable interpolatable)
-        {
-            _interpolatables.Add(interpolatable);
         }
     }
     
@@ -213,16 +195,6 @@ public abstract class Scene
                     _fixedUpdatables.Remove(fixedUpdatable);
                 }
                 
-                if (component is ILateUpdatable lateUpdatable)
-                {
-                    _lateUpdatables.Remove(lateUpdatable);
-                }
-                
-                if (component is IInterpolatable interpolatable)
-                {
-                    _interpolatables.Remove(interpolatable);
-                }
-            
                 component.OnDestroy();
             }
         

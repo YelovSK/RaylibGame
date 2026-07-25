@@ -64,14 +64,11 @@ public class SceneManager : Singleton<SceneManager>
     {
         Current?.Update(dt);
     }
-    
-    public void LateUpdate(float dt)
-    {
-        Current?.LateUpdate(dt);
-    }
 
-    public void Draw(float alpha)
+    public void EndFrame() => Current?.EndFrame();
+
+    public void Draw(float alpha, float dt)
     {
-        Current?.Draw(alpha);
+        Current?.Draw(alpha, dt);
     }
 }

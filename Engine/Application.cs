@@ -52,11 +52,10 @@ public abstract class Application
     protected abstract void AfterWindowInit();
     protected virtual void Update(float dt) => SceneManager.Instance.Update(dt);
     protected virtual void FixedUpdate() => SceneManager.Instance.FixedUpdate();
-    protected virtual void LateUpdate(float dt) => SceneManager.Instance.LateUpdate(dt);
-    protected virtual void Draw(float alpha)
+    protected virtual void Draw(float alpha, float dt)
     {
         Graphics.ClearBackground(Color.Black);
-        SceneManager.Instance.Draw(alpha);
+        SceneManager.Instance.Draw(alpha, dt);
     }
     /// <summary>
     /// Do the final drawing here.
@@ -121,8 +120,8 @@ public abstract class Application
                     FixedTime.Ticks++;
                     accumulator -= FixedTime.TICK_RATE;
                 }
-                
-                LateUpdate(dt);
+
+                SceneManager.Instance.EndFrame();
                 
                 var updateEnd = Time.GetTime();
                 var alpha = (float)(accumulator / FixedTime.TICK_RATE);
@@ -132,7 +131,7 @@ public abstract class Application
                 // Draw in virtual resolution
                 var drawStart = Time.GetTime();
                 Graphics.BeginTextureMode(_virtualRenderTarget);
-                Draw(alpha);
+                Draw(alpha, dt);
                 Graphics.EndTextureMode();
 
                 // Apply shaders to low res texture

@@ -3,7 +3,7 @@ using Engine.Collections;
 
 namespace Engine.Components;
 
-public class TransformComponent : Component, IInterpolatable
+public class TransformComponent : Component
 {
     private readonly List<TransformComponent> _children = [];
     public ReadOnlyCollections<TransformComponent> Children => new(_children);
@@ -13,8 +13,9 @@ public class TransformComponent : Component, IInterpolatable
     private bool _isDirty = true;
 
     // Interpolation state
-    private Vector2 _previousLocalPosition;
-    private float _previousLocalRotation;
+    private Vector2 _previousPosition;
+    private float _previousRotation;
+    private bool _hasPreviousState;
     
     /// <summary>
     /// Interpolated position for rendering. Only valid during Draw phase.
@@ -147,18 +148,24 @@ public class TransformComponent : Component, IInterpolatable
         return _worldMatrix;
     }
     
-    // IInterpolatable implementation
-    public void SavePreviousState()
+    internal void SavePreviousState()
     {
-        _previousLocalPosition = Position;
-        _previousLocalRotation = Rotation;
+        _previousPosition = Position;
+        _previousRotation = Rotation;
+        _hasPreviousState = true;
     }
 
-    public void ComputeRenderState(float alpha)
+    internal void ComputeRenderState(float alpha)
     {
-        RenderPosition = Vector2.Lerp(_previousLocalPosition, Position, alpha);
-        RenderRotation = LerpAngle(_previousLocalRotation, Rotation, alpha);
-        Console.WriteLine("Computing");
+        if (!_hasPreviousState)
+        {
+            RenderPosition = Position;
+            RenderRotation = Rotation;
+            return;
+        }
+
+        RenderPosition = Vector2.Lerp(_previousPosition, Position, alpha);
+        RenderRotation = LerpAngle(_previousRotation, Rotation, alpha);
     }
     
     private static float LerpAngle(float a, float b, float t)

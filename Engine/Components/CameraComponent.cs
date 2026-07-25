@@ -1,14 +1,15 @@
-﻿using System.Numerics;
-using Engine.Helpers;
+﻿using Engine.Helpers;
 using Raylib_CSharp.Camera.Cam2D;
 
 namespace Engine.Components;
 
-public class CameraComponent : Component, ILateUpdatable
+public class CameraComponent : Component
 {
     public Camera2D Camera;
     public Entity? Target { get; set; }
     public float FollowSpeed = 7f;
+
+    private bool _isFollowing;
 
     public CameraComponent()
     {
@@ -21,16 +22,24 @@ public class CameraComponent : Component, ILateUpdatable
         Entity.Scene.RegisterCamera(this);
     }
 
-    public void LateUpdate(float dt)
+    internal void PrepareForDraw(float dt)
     {
         if (Target is null)
         {
+            _isFollowing = false;
             return;
         }
 
-        var newTarget = Vector2.Lerp(Camera.Target, Target.Transform.RenderPosition, FollowSpeed * dt);
+        var targetPosition = Target.Transform.RenderPosition;
+        if (!_isFollowing)
+        {
+            Camera.Target = targetPosition;
+            _isFollowing = true;
+            return;
+        }
 
-        Camera.Target = newTarget;
+        var amount = 1f - MathF.Exp(-FollowSpeed * dt);
+        Camera.Target += (targetPosition - Camera.Target) * amount;
     }
 
     public override void OnDestroy()
