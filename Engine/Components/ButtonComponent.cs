@@ -47,7 +47,7 @@ public class ButtonComponent : Component, IUpdatable, IDrawable
             return;
         }
         
-        HandleTilt(dt, _rectTransform.Rectangle, Input.GetVirtualMousePosition());
+        HandleTilt(dt, _rectTransform.Bounds, Input.GetVirtualMousePosition());
 
         if (_guiInteractableComponent.IsClicked)
         {
@@ -70,8 +70,8 @@ public class ButtonComponent : Component, IUpdatable, IDrawable
         }
         else
         {
-            var normalizedX = Math.Clamp(offset.X / (_rectTransform!.Rectangle.Width / 2), -1f, 1f);
-            var normalizedY = Math.Clamp(offset.Y / (_rectTransform!.Rectangle.Height / 2), -1f, 1f);
+            var normalizedX = Math.Clamp(offset.X / (bounds.Width / 2), -1f, 1f);
+            var normalizedY = Math.Clamp(offset.Y / (bounds.Height / 2), -1f, 1f);
         
             targetTiltX = -normalizedY * MAX_TILT_DEGREES;
             targetTiltY = normalizedX * MAX_TILT_DEGREES;
@@ -83,6 +83,12 @@ public class ButtonComponent : Component, IUpdatable, IDrawable
     
     public void Draw()
     {
+        if (_rectTransform is null)
+        {
+            return;
+        }
+
+        var bounds = _rectTransform.Bounds;
         var color = _guiInteractableComponent?.State switch
         {
             InteractableState.Normal => NormalColor,
@@ -94,10 +100,10 @@ public class ButtonComponent : Component, IUpdatable, IDrawable
         // Tilt the button in 3D space and project it into 2D
         Span<Vector3> corners =
         [
-            new(-_rectTransform.Rectangle.Width/2, -_rectTransform.Rectangle.Height/2, 0),
-            new( _rectTransform.Rectangle.Width/2, -_rectTransform.Rectangle.Height/2, 0),
-            new(-_rectTransform.Rectangle.Width/2,  _rectTransform.Rectangle.Height/2, 0),
-            new( _rectTransform.Rectangle.Width/2,  _rectTransform.Rectangle.Height/2, 0),
+            new(-bounds.Width/2, -bounds.Height/2, 0),
+            new( bounds.Width/2, -bounds.Height/2, 0),
+            new(-bounds.Width/2,  bounds.Height/2, 0),
+            new( bounds.Width/2,  bounds.Height/2, 0),
         ];
         
         var tiltXRad = _currentTiltX * RayMath.Deg2Rad;
@@ -117,7 +123,7 @@ public class ButtonComponent : Component, IUpdatable, IDrawable
             );
         }
 
-        var center = _rectTransform.Rectangle.Center();
+        var center = bounds.Center();
         
         // TODO: i think this could be a helper
         Span<Vector2> projected = stackalloc Vector2[4];
@@ -140,8 +146,8 @@ public class ButtonComponent : Component, IUpdatable, IDrawable
         // Text
         var textSize = TextManager.MeasureText(Text, FontSize);
         var textPos = new Vector2(
-            _rectTransform.Rectangle.X + (_rectTransform.Rectangle.Width - textSize) / 2,
-            _rectTransform.Rectangle.Y + (_rectTransform.Rectangle.Height - FontSize) / 2
+            bounds.X + (bounds.Width - textSize) / 2,
+            bounds.Y + (bounds.Height - FontSize) / 2
         );
 
         // Bounce on it crazy style

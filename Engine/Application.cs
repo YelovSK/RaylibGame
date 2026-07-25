@@ -187,19 +187,8 @@ public abstract class Application
     private void BlitToScreen(Texture2D finalTexture)
     {
         Graphics.ClearBackground(Color.Black);
-        
-        var screenWidth = Window.GetScreenWidth();
-        var screenHeight = Window.GetScreenHeight();
-        
-        var scale = Math.Min((float)screenWidth / VirtualWidth, (float)screenHeight / VirtualHeight);
-        Rectangle dest = new(
-            (screenWidth - VirtualWidth * scale) / 2,
-            (screenHeight - VirtualHeight * scale) / 2,
-            VirtualWidth * scale,
-            VirtualHeight * scale
-        );
         Rectangle source = new(0, 0, VirtualWidth, -VirtualHeight);
 
-        Graphics.DrawTexturePro(finalTexture, source, dest, Vector2.Zero, 0.0f, Color.White);
+        Graphics.DrawTexturePro(finalTexture, source, VirtualViewport.Destination, Vector2.Zero, 0.0f, Color.White);
     }
 }

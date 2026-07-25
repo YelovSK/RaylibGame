@@ -1,7 +1,6 @@
 ﻿using System.Numerics;
 using Engine;
 using Engine.Components;
-using Engine.Helpers;
 using Raylib_CSharp.Colors;
 
 namespace Game.Scenes;
@@ -10,7 +9,7 @@ public class PerformanceTestScene : Scene
 {
     public override void Load()
     {
-        var middle = VirtualLayout.Center();
+        var middle = VirtualViewport.Center;
 
         for (var i = 0; i < 100_000; i++)
         {

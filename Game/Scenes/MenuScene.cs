@@ -1,8 +1,6 @@
 using System.Numerics;
 using Engine;
 using Engine.Components;
-using Engine.Enums;
-using Engine.Helpers;
 using Raylib_CSharp.Colors;
 using Raylib_CSharp.Transformations;
 
@@ -15,8 +13,6 @@ public class MenuScene : Scene
     
     public override void Load()
     {
-        var middle = VirtualLayout.AnchorToScreen((int)BUTTON_WIDTH, (int)BUTTON_HEIGHT, Anchor.Center);
-        
         var buttonOffset = BUTTON_HEIGHT * 1.2f;
 
         var background = CreateEntity();
@@ -25,7 +21,7 @@ public class MenuScene : Scene
         backgroundSprite.Height = Application.Instance.VirtualHeight;
         backgroundSprite.Color = Color.SkyBlue;
 
-        var play = AddButton("Play", middle.Y - buttonOffset);
+        var play = AddButton("Play", -buttonOffset);
         play.OnClick = () =>
         {
             if (SceneManager.Instance.HasScene<GameScene>())
@@ -38,27 +34,26 @@ public class MenuScene : Scene
             }
         };
         
-        var options = AddButton("Options", middle.Y);
+        var options = AddButton("Options", 0);
         options.OnClick = () => SceneManager.Instance.Push(new OptionsScene());
         
-        var quit = AddButton("Quit", middle.Y + buttonOffset);
+        var quit = AddButton("Quit", buttonOffset);
         quit.OnClick = Application.Instance.Close;
     }
 
-    private ButtonComponent AddButton(string text, float y)
+    private ButtonComponent AddButton(string text, float yOffset)
     {
-        var middle = VirtualLayout.Center(BUTTON_WIDTH, 0);
-
         var buttonObject = CreateEntity();
         buttonObject.AddComponent<GuiInteractableComponent>();
         var button = buttonObject.AddComponent<ButtonComponent>();
         button.Text = text;
         button.FontSize = (int)(0.04f * Application.Instance.VirtualWidth);
-        button.RenderSpace = RenderSpace.Screen;
 
         var transform = buttonObject.AddComponent<RectTransform>();
-        transform.Rectangle.Position = middle with { Y = y };
-        transform.Rectangle.Size = new Vector2(BUTTON_WIDTH, BUTTON_HEIGHT);
+        transform.Anchor = new Vector2(0.5f);
+        transform.Pivot = new Vector2(0.5f);
+        transform.Offset = new Vector2(0, yOffset);
+        transform.Size = new Vector2(BUTTON_WIDTH, BUTTON_HEIGHT);
         
         return button;
     }

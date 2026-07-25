@@ -37,7 +37,7 @@ public class GuiInteractableComponent : Component, IUpdatable
         
         var mousePos = Input.GetVirtualMousePosition();
 
-        IsHovered = ShapeHelper.CheckCollisionPointRec(mousePos, _rectTransform.Rectangle);
+        IsHovered = ShapeHelper.CheckCollisionPointRec(mousePos, _rectTransform.Bounds);
 
         if (IsHovered && Input.IsMouseButtonPressed(MouseButton.Left))
         {

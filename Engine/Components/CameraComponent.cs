@@ -1,4 +1,3 @@
-﻿using Engine.Helpers;
 using Raylib_CSharp.Camera.Cam2D;
 
 namespace Engine.Components;
@@ -13,7 +12,7 @@ public class CameraComponent : Component
 
     public CameraComponent()
     {
-        Camera.Offset = VirtualLayout.Center();
+        Camera.Offset = VirtualViewport.Center;
         Camera.Zoom = 1f;
     }
 

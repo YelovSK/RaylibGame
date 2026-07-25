@@ -23,7 +23,7 @@ public class RectangleComponent : Component, IDrawable
     {
         if (_rectTransform != null)
         {
-            Graphics.DrawRectangleRec(_rectTransform.Rectangle, Color);
+            Graphics.DrawRectangleRec(_rectTransform.Bounds, Color);
         }
     }
 }

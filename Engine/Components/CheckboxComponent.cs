@@ -47,8 +47,9 @@ public class CheckboxComponent : Component, IUpdatable, IDrawable
             return;
         }
 
-        var pos = _rectTransform.Rectangle.Position;
-        var size = _rectTransform.Rectangle.Size;
+        var bounds = _rectTransform.Bounds;
+        var pos = bounds.Position;
+        var size = bounds.Size;
 
         // Choose color based on state
         var bgColor = _guiInteractableComponent?.State switch
@@ -62,7 +63,7 @@ public class CheckboxComponent : Component, IUpdatable, IDrawable
         // Draw button background
         Graphics.DrawRectangleV(pos, size, bgColor);
         Graphics.DrawRectangleLinesEx(
-            _rectTransform.Rectangle,
+            bounds,
             2,
             Color.Black
         );

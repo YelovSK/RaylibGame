@@ -12,6 +12,13 @@ public class TextComponent : Component, IDrawable
     public string Text;
     public int FontSize = 20;
 
+    private RectTransform? _rectTransform;
+
+    public override void Start()
+    {
+        _rectTransform = GetComponent<RectTransform>();
+    }
+
     public float TextSize()
     {
         return TextManager.MeasureText(Text, FontSize);
@@ -19,9 +26,15 @@ public class TextComponent : Component, IDrawable
 
     public void Draw()
     {
+        if (_rectTransform is null)
+        {
+            return;
+        }
+
+        var position = _rectTransform.Bounds.Position;
         Graphics.DrawText(Text,
-            (int)Entity.Transform.Position.X,
-            (int)Entity.Transform.Position.Y,
+            (int)position.X,
+            (int)position.Y,
             FontSize,
             Color.White);
     }
