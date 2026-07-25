@@ -1,7 +1,7 @@
 ﻿using Engine.PostProcessing;
 using Game.Persistence;
-using Raylib_CSharp;
-using Raylib_CSharp.Shaders;
+
+using Raylib_cs;
 
 namespace Game.PostProcessing;
 
@@ -11,11 +11,11 @@ public class GrainPass : FullscreenShaderPass
     
     public GrainPass() : base("grain.fs", () => Settings.Instance.EnableShaders)
     {
-        _timeUniformLoc = Shader.GetLocation("iTime");
+        _timeUniformLoc = Raylib.GetShaderLocation(Shader, "iTime");
     }
     
     protected override void SetUniforms(Shader shader)
     {
-        shader.SetValue(_timeUniformLoc, (float)Time.GetTime(), ShaderUniformDataType.Float);
+        Raylib.SetShaderValue(shader, _timeUniformLoc, (float)Raylib.GetTime(), ShaderUniformDataType.Float);
     }
 }

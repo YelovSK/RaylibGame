@@ -3,9 +3,8 @@ using Engine;
 using Engine.Components;
 using Engine.Extensions;
 using Game.Persistence;
-using Raylib_CSharp.Collision;
-using Raylib_CSharp.Interact;
-using Raylib_CSharp.Transformations;
+
+using Raylib_cs;
 
 namespace Game.Components;
 
@@ -119,7 +118,7 @@ public class PlayerController : Component, IFixedUpdatable
     private bool _consumed = false;
     private void HandleJumpRelease()
     {
-        if (!_consumed && !Input.IsKeyDown(Settings.Instance.JumpKey) && Velocity.Y < -10f)
+        if (!_consumed && !Raylib.IsKeyDown(Settings.Instance.JumpKey) && Velocity.Y < -10f)
         {
             _consumed = true;
             Velocity.Y /= 2;
@@ -189,7 +188,7 @@ public class PlayerController : Component, IFixedUpdatable
 
         foreach (var collider in _sceneColliders)
         {
-            var overlap = ShapeHelper.GetCollisionRec(collider.Bounds, Bounds);
+            var overlap = Raylib.GetCollisionRec(collider.Bounds, Bounds);
 
             if (overlap.Width == 0 || overlap.Height == 0)
             {
@@ -257,19 +256,19 @@ public class PlayerController : Component, IFixedUpdatable
     {
         var direction = new Vector2();
 
-        if (Input.IsKeyDown(KeyboardKey.Up))
+        if (Raylib.IsKeyDown(KeyboardKey.Up))
         {
             direction.Y -= 1;
         }
-        if (Input.IsKeyDown(KeyboardKey.Down))
+        if (Raylib.IsKeyDown(KeyboardKey.Down))
         {
             direction.Y += 1;
         }
-        if (Input.IsKeyDown(KeyboardKey.Left))
+        if (Raylib.IsKeyDown(KeyboardKey.Left))
         {
             direction.X -= 1;
         }
-        if (Input.IsKeyDown(KeyboardKey.Right))
+        if (Raylib.IsKeyDown(KeyboardKey.Right))
         {
             direction.X += 1;
         }

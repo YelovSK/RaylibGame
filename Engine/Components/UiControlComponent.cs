@@ -1,7 +1,7 @@
 using System.Numerics;
 using Engine.Extensions;
-using Raylib_CSharp.Collision;
-using Raylib_CSharp.Interact;
+
+using Raylib_cs;
 
 namespace Engine.Components;
 
@@ -21,16 +21,16 @@ public abstract class UiControlComponent : UiComponent, IUpdatable
 
     public void Update(float dt)
     {
-        var mousePosition = Input.GetVirtualMousePosition();
-        IsHovered = ShapeHelper.CheckCollisionPointRec(mousePosition, Rect.Bounds);
+        var mousePosition = Raylib.GetVirtualMousePosition();
+        IsHovered = Raylib.CheckCollisionPointRec(mousePosition, Rect.Bounds);
 
-        if (IsHovered && Input.IsMouseButtonPressed(MouseButton.Left))
+        if (IsHovered && Raylib.IsMouseButtonPressed(MouseButton.Left))
         {
             _wasPressed = true;
         }
 
         var clicked = _wasPressed &&
-                      Input.IsMouseButtonReleased(MouseButton.Left);
+                      Raylib.IsMouseButtonReleased(MouseButton.Left);
         if (clicked)
         {
             _wasPressed = false;

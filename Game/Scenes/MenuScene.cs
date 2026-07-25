@@ -1,8 +1,8 @@
 using System.Numerics;
 using Engine;
 using Engine.Components;
-using Raylib_CSharp.Colors;
-using Raylib_CSharp.Transformations;
+
+using Raylib_cs;
 
 namespace Game.Scenes;
 

@@ -1,5 +1,5 @@
-﻿using Raylib_CSharp;
-using Raylib_CSharp.Interact;
+
+using Raylib_cs;
 
 namespace Engine;
 
@@ -27,18 +27,18 @@ public class InputManager : Singleton<InputManager>
     
     internal void Gather()
     {
-        var now = Time.GetTime();
+        var now = Raylib.GetTime();
 
-        var key = Input.GetKeyPressed();
+        var key = Raylib.GetKeyPressed();
         while (key != 0)
         {
             _inputTimes[key] = now;
             _inputTicks[key] = FixedTime.Ticks;
-            key = Input.GetKeyPressed();
+            key = Raylib.GetKeyPressed();
         }
     }
     
-    public bool IsKeyBuffered(KeyboardKey key, float bufferTime) => Time.GetTime() - _inputTimes[(int)key] <= bufferTime;
+    public bool IsKeyBuffered(KeyboardKey key, float bufferTime) => Raylib.GetTime() - _inputTimes[(int)key] <= bufferTime;
     
     /// <summary>
     /// Returns true if the key was pressed this fixed update tick.

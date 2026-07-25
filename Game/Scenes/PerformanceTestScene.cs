@@ -1,7 +1,8 @@
 ﻿using System.Numerics;
 using Engine;
 using Engine.Components;
-using Raylib_CSharp.Colors;
+
+using Raylib_cs;
 
 namespace Game.Scenes;
 
@@ -21,7 +22,7 @@ public class PerformanceTestScene : Scene
             var sprite = entity.AddComponent<SpriteComponent>();
             sprite.Width = 10;
             sprite.Height = 10;
-            sprite.Color = new Color(r, g, b, 255);
+            sprite.Color = new Color(r, g, b, (byte)255);
             entity.AddComponent<RandomMovementComponent>();
         }
     }
@@ -30,14 +31,14 @@ public class PerformanceTestScene : Scene
 public class RandomMovementComponent : Component, IUpdatable
 {
     private readonly Random _random = new();
-    
+
     public void FixedUpdate()
     {
         var dx = _random.Next(0, 2);
         var dy = _random.Next(0, 2);
         Entity.Transform.Position += new Vector2(dx, dy);
     }
-    
+
     public void Update(float dt)
     {
         var dx = _random.Next(0, 2);

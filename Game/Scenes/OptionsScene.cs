@@ -4,10 +4,8 @@ using Engine.Components;
 using Engine.Extensions;
 using Game.Components;
 using Game.Persistence;
-using Raylib_CSharp.Colors;
-using Raylib_CSharp.Interact;
-using Raylib_CSharp.Transformations;
-using Raylib_CSharp.Windowing;
+
+using Raylib_cs;
 
 namespace Game.Scenes;
 
@@ -34,11 +32,11 @@ public class OptionsScene : Scene
             Settings.Instance.IsVsyncEnabled = isChecked;
             if (isChecked)
             {
-                Window.SetState(ConfigFlags.VSyncHint);
+                Raylib.SetWindowState(ConfigFlags.VSyncHint);
             }
             else
             {
-                Window.ClearState(ConfigFlags.VSyncHint);
+                Raylib.ClearWindowState(ConfigFlags.VSyncHint);
             }
         });
         
@@ -52,11 +50,11 @@ public class OptionsScene : Scene
         {
             if (isChecked)
             {
-                Window.SetState(ConfigFlags.BorderlessWindowMode);
+                Raylib.SetWindowState(ConfigFlags.BorderlessWindowMode);
             }
             else
             {
-                Window.ClearState(ConfigFlags.BorderlessWindowMode);
+                Raylib.ClearWindowState(ConfigFlags.BorderlessWindowMode);
             }
             Settings.Instance.IsFullScreen = isChecked;
         });

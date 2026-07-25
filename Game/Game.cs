@@ -3,10 +3,8 @@ using Engine.PostProcessing;
 using Game.Persistence;
 using Game.PostProcessing;
 using Game.Scenes;
-using Raylib_CSharp;
-using Raylib_CSharp.Interact;
-using Raylib_CSharp.Rendering;
-using Raylib_CSharp.Windowing;
+
+using Raylib_cs;
 
 namespace Game;
 
@@ -23,7 +21,7 @@ public class Game() : Application(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, TITLE)
 
         if (Settings.Instance.IsVsyncEnabled)
         {
-            Window.SetState(ConfigFlags.VSyncHint);
+            Raylib.SetWindowState(ConfigFlags.VSyncHint);
         }
 
         // This doesn't actually do anything. Broken piece of shit.
@@ -31,23 +29,23 @@ public class Game() : Application(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, TITLE)
         {
             Raylib.SetConfigFlags(ConfigFlags.BorderlessWindowMode);
         }
-        
+
         Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
     }
 
     protected override void AfterWindowInit()
     {
-        Input.SetExitKey(KeyboardKey.Null);
+        Raylib.SetExitKey(KeyboardKey.Null);
 
-        //SceneManager.Instance.Push(new PerformanceTestScene());
-        SceneManager.Instance.Push(new MenuScene(Close));
+        SceneManager.Instance.Push(new PerformanceTestScene());
+        // SceneManager.Instance.Push(new MenuScene(Close));
     }
 
     protected override void BeforeDrawEnd()
     {
         if (Settings.Instance.ShowFps)
         {
-            Graphics.DrawFPS(0, 0);
+            Raylib.DrawFPS(0, 0);
         }
     }
 

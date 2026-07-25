@@ -1,6 +1,6 @@
 using System.Numerics;
-using Raylib_CSharp.Transformations;
-using Raylib_CSharp.Windowing;
+
+using Raylib_cs;
 
 namespace Engine;
 
@@ -28,8 +28,8 @@ public static class VirtualViewport
     {
         get
         {
-            var screenWidth = Window.GetScreenWidth();
-            var screenHeight = Window.GetScreenHeight();
+            var screenWidth = Raylib.GetScreenWidth();
+            var screenHeight = Raylib.GetScreenHeight();
             var scale = Math.Min(
                 screenWidth / (float)Width,
                 screenHeight / (float)Height

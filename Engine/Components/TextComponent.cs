@@ -1,6 +1,5 @@
-using Raylib_CSharp.Colors;
-using Raylib_CSharp.Fonts;
-using Raylib_CSharp.Rendering;
+
+using Raylib_cs;
 
 namespace Engine.Components;
 
@@ -11,12 +10,12 @@ public class TextComponent : UiComponent
 
     public float TextSize()
     {
-        return TextManager.MeasureText(Text, FontSize);
+        return Raylib.MeasureText(Text, FontSize);
     }
 
     public override void Draw()
     {
         var position = Rect.Bounds.Position;
-        Graphics.DrawText(Text, (int)position.X, (int)position.Y, FontSize, Color.White);
+        Raylib.DrawText(Text, (int)position.X, (int)position.Y, FontSize, Color.White);
     }
 }

@@ -1,10 +1,7 @@
 using System.Numerics;
 using Engine.Extensions;
-using Raylib_CSharp;
-using Raylib_CSharp.Colors;
-using Raylib_CSharp.Fonts;
-using Raylib_CSharp.Rendering;
-using Raylib_CSharp.Transformations;
+
+using Raylib_cs;
 
 namespace Engine.Components;
 
@@ -59,8 +56,8 @@ public class ButtonComponent : UiControlComponent
             targetTiltY = normalizedX * MAX_TILT_DEGREES;
         }
 
-        _currentTiltX = RayMath.Lerp(_currentTiltX, targetTiltX, TILT_SPEED * dt);
-        _currentTiltY = RayMath.Lerp(_currentTiltY, targetTiltY, TILT_SPEED * dt);
+        _currentTiltX = Raymath.Lerp(_currentTiltX, targetTiltX, TILT_SPEED * dt);
+        _currentTiltY = Raymath.Lerp(_currentTiltY, targetTiltY, TILT_SPEED * dt);
     }
 
     public override void Draw()
@@ -82,13 +79,13 @@ public class ButtonComponent : UiControlComponent
             new( bounds.Width / 2,  bounds.Height / 2, 0),
         ];
 
-        var tiltXRad = _currentTiltX * RayMath.Deg2Rad;
-        var tiltYRad = _currentTiltY * RayMath.Deg2Rad;
+        var tiltXRad = _currentTiltX * MathF.PI / 180f;
+        var tiltYRad = _currentTiltY * MathF.PI / 180f;
 
         for (var i = 0; i < corners.Length; i++)
         {
-            corners[i] = RayMath.Vector3RotateByAxisAngle(corners[i], Vector3.UnitX, tiltXRad);
-            corners[i] = RayMath.Vector3RotateByAxisAngle(corners[i], Vector3.UnitY, tiltYRad);
+            corners[i] = Raymath.Vector3RotateByAxisAngle(corners[i], Vector3.UnitX, tiltXRad);
+            corners[i] = Raymath.Vector3RotateByAxisAngle(corners[i], Vector3.UnitY, tiltYRad);
         }
 
         var center = bounds.Center();
@@ -102,12 +99,12 @@ public class ButtonComponent : UiControlComponent
             );
         }
 
-        Graphics.DrawQuad(projected[0], projected[1], projected[2], projected[3], color);
+        Raylib.DrawQuad(projected[0], projected[1], projected[2], projected[3], color);
 
-        Span<Vector2> outline = [projected[0], projected[1], projected[3], projected[2], projected[0]];
-        Graphics.DrawSplineLinear(outline, StrokeWidth, Color.Black);
+        Vector2[] outline = [projected[0], projected[1], projected[3], projected[2], projected[0]];
+        Raylib.DrawSplineLinear(outline, outline.Length, StrokeWidth, Color.Black);
 
-        var textSize = TextManager.MeasureText(Text, FontSize);
+        var textSize = Raylib.MeasureText(Text, FontSize);
         var textPosition = new Vector2(
             bounds.X + (bounds.Width - textSize) / 2,
             bounds.Y + (bounds.Height - FontSize) / 2
@@ -115,10 +112,10 @@ public class ButtonComponent : UiControlComponent
 
         if (IsHovered)
         {
-            var sin = Math.Sin(2 * Math.PI * Time.GetTime());
+            var sin = Math.Sin(2 * Math.PI * Raylib.GetTime());
             textPosition.Y += (float)(sin * VirtualViewport.Height * 0.01f);
         }
 
-        Graphics.DrawText(Text, (int)textPosition.X, (int)textPosition.Y, FontSize, TextColor);
+        Raylib.DrawText(Text, (int)textPosition.X, (int)textPosition.Y, FontSize, TextColor);
     }
 }

@@ -1,6 +1,6 @@
 using System.Numerics;
-using Raylib_CSharp.Colors;
-using Raylib_CSharp.Rendering;
+
+using Raylib_cs;
 
 namespace Engine.Components;
 
@@ -33,13 +33,13 @@ public class CheckboxComponent : UiControlComponent
             _ => NormalColor,
         };
 
-        Graphics.DrawRectangleV(position, size, backgroundColor);
-        Graphics.DrawRectangleLinesEx(bounds, 2, Color.Black);
+        Raylib.DrawRectangleV(position, size, backgroundColor);
+        Raylib.DrawRectangleLinesEx(bounds, 2, Color.Black);
 
         if (IsChecked)
         {
-            Graphics.DrawLineEx(position, position + size, StrokeWidth, Color.Black);
-            Graphics.DrawLineEx(
+            Raylib.DrawLineEx(position, position + size, StrokeWidth, Color.Black);
+            Raylib.DrawLineEx(
                 position with { X = position.X + size.X },
                 position with { Y = position.Y + size.Y },
                 StrokeWidth,

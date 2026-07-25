@@ -1,7 +1,6 @@
 using System.Reflection;
-using Raylib_CSharp.Audio;
-using Raylib_CSharp.Shaders;
-using Raylib_CSharp.Textures;
+
+using Raylib_cs;
 
 namespace Engine;
 
@@ -37,7 +36,7 @@ public class ResourceManager : Singleton<ResourceManager>
             return tex;
         }
 
-        var loaded = Texture2D.Load(path);
+        var loaded = Raylib.LoadTexture(path);
         _textures[path] = loaded;
         return loaded;
     }
@@ -46,7 +45,7 @@ public class ResourceManager : Singleton<ResourceManager>
     {
         if (_textures.TryGetValue(path, out var tex))
         {
-            tex.Unload();
+            Raylib.UnloadTexture(tex);
             _textures.Remove(path);
         }
     }
@@ -64,7 +63,7 @@ public class ResourceManager : Singleton<ResourceManager>
             ? null
             : LoadEmbedded(vsName);
         var fs = LoadEmbedded(fsName);
-        shader = Shader.LoadFromMemory(vs, fs);
+        shader = Raylib.LoadShaderFromMemory(vs, fs);
         _shaders[key] = shader;
         return shader;
     }
@@ -74,7 +73,7 @@ public class ResourceManager : Singleton<ResourceManager>
         var key = $"{vsName ?? "0"}|{fsName}";
         if (_shaders.TryGetValue(key, out var shader))
         {
-            shader.Unload();
+            Raylib.UnloadShader(shader);
             _shaders.Remove(key);
         }
     }
@@ -86,7 +85,7 @@ public class ResourceManager : Singleton<ResourceManager>
             return sound;
         }
 
-        var loaded = Sound.Load(path);
+        var loaded = Raylib.LoadSound(path);
         _sounds[path] = loaded;
         return loaded;
     }
@@ -95,7 +94,7 @@ public class ResourceManager : Singleton<ResourceManager>
     {
         if (_sounds.TryGetValue(path, out var sound))
         {
-            sound.Unload();
+            Raylib.UnloadSound(sound);
             _sounds.Remove(path);
         }
     }
@@ -107,7 +106,7 @@ public class ResourceManager : Singleton<ResourceManager>
             return music;
         }
 
-        var loaded = Music.Load(path);
+        var loaded = Raylib.LoadMusicStream(path);
         _music[path] = loaded;
         return loaded;
     }
@@ -116,17 +115,17 @@ public class ResourceManager : Singleton<ResourceManager>
     {
         if (_music.TryGetValue(path, out var music))
         {
-            music.UnloadStream();
+            Raylib.UnloadMusicStream(music);
             _music.Remove(path);
         }
     }
 
     public void Cleanup()
     {
-        foreach (var x in _textures.Values) x.Unload();
-        foreach (var x in _shaders.Values) x.Unload();
-        foreach (var x in _sounds.Values) x.Unload();
-        foreach (var x in _music.Values) x.UnloadStream();
+        foreach (var x in _textures.Values) Raylib.UnloadTexture(x);
+        foreach (var x in _shaders.Values) Raylib.UnloadShader(x);
+        foreach (var x in _sounds.Values) Raylib.UnloadSound(x);
+        foreach (var x in _music.Values) Raylib.UnloadMusicStream(x);
 
         _textures.Clear();
         _shaders.Clear();

@@ -1,6 +1,7 @@
 ﻿using Engine;
 using Game.Scenes;
-using Raylib_CSharp.Interact;
+
+using Raylib_cs;
 
 namespace Game.Components;
 
@@ -8,12 +9,12 @@ public class GameSceneController : Component, IUpdatable
 {
     public void Update(float dt)
     {
-        if (Input.IsKeyPressed(KeyboardKey.Escape))
+        if (Raylib.IsKeyPressed(KeyboardKey.Escape))
         {
             SceneManager.Instance.Pop();
         }
         
-        if (Input.IsKeyPressed(KeyboardKey.R))
+        if (Raylib.IsKeyPressed(KeyboardKey.R))
         {
             SceneManager.Instance.Pop();
             SceneManager.Instance.Push(new GameScene());

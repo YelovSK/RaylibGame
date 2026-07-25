@@ -1,11 +1,7 @@
 ﻿using System.Numerics;
 using Engine.PostProcessing;
-using Raylib_CSharp;
-using Raylib_CSharp.Colors;
-using Raylib_CSharp.Rendering;
-using Raylib_CSharp.Textures;
-using Raylib_CSharp.Transformations;
-using Raylib_CSharp.Windowing;
+
+using Raylib_cs;
 
 namespace Engine;
 
@@ -41,7 +37,7 @@ public abstract class Application
     protected virtual void FixedUpdate() => SceneManager.Instance.FixedUpdate();
     protected virtual void Draw(float alpha, float dt)
     {
-        Graphics.ClearBackground(Color.Black);
+        Raylib.ClearBackground(Color.Black);
         SceneManager.Instance.Draw(alpha, dt);
     }
     /// <summary>
@@ -66,13 +62,13 @@ public abstract class Application
 
         BeforeWindowInit();
 
-        Window.Init(Window.GetScreenWidth(), Window.GetScreenHeight(), Title);
+        Raylib.InitWindow(VirtualViewport.Width * 2, VirtualViewport.Height * 2, Title);
 
-        _virtualRenderTarget = RenderTexture2D.Load(VirtualViewport.Width, VirtualViewport.Height);
-        _virtualRenderTarget.Texture.SetFilter(TextureFilter.Point);
+        _virtualRenderTarget = Raylib.LoadRenderTexture(VirtualViewport.Width, VirtualViewport.Height);
+        Raylib.SetTextureFilter(_virtualRenderTarget.Texture, TextureFilter.Point);
 
-        _renderTarget = RenderTexture2D.Load(Window.GetScreenWidth(), Window.GetScreenHeight());
-        _renderTarget.Texture.SetFilter(TextureFilter.Bilinear);
+        _renderTarget = Raylib.LoadRenderTexture(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
+        Raylib.SetTextureFilter(_renderTarget.Texture, TextureFilter.Bilinear);
 
         _virtualPostProcessor = new PostProcessor(
             VirtualViewport.Width,
@@ -80,26 +76,26 @@ public abstract class Application
             GetVirtualShaders(),
             TextureFilter.Point
         );
-        _postProcessor = new PostProcessor(Window.GetScreenWidth(), Window.GetScreenHeight(), GetShaders(), TextureFilter.Bilinear);
+        _postProcessor = new PostProcessor(Raylib.GetScreenWidth(), Raylib.GetScreenHeight(), GetShaders(), TextureFilter.Bilinear);
 
         try
         {
             AfterWindowInit();
 
             double accumulator = 0;
-            while (!Window.ShouldClose() && !_closeRequested)
+            while (!Raylib.WindowShouldClose() && !_closeRequested)
             {
                 try
                 {
-                    if (Window.IsResized())
+                    if (Raylib.IsWindowResized())
                     {
                         OnWindowResized();
                     }
 
-                    var dt = Time.GetFrameTime();
+                    var dt = Raylib.GetFrameTime();
 
                     // Update
-                    var updateStart = Time.GetTime();
+                    var updateStart = Raylib.GetTime();
                     InputManager.Instance.Gather();
                     Update(dt);
 
@@ -114,42 +110,42 @@ public abstract class Application
 
                     SceneManager.Instance.EndFrame();
 
-                    var updateEnd = Time.GetTime();
+                    var updateEnd = Raylib.GetTime();
                     var alpha = (float)(accumulator / FixedTime.TICK_RATE);
 
                     UpdateTimeMs = (updateEnd - updateStart) * 1000;
 
                     // Draw in virtual resolution
-                    var drawStart = Time.GetTime();
-                    Graphics.BeginTextureMode(_virtualRenderTarget);
+                    var drawStart = Raylib.GetTime();
+                    Raylib.BeginTextureMode(_virtualRenderTarget);
                     Draw(alpha, dt);
-                    Graphics.EndTextureMode();
+                    Raylib.EndTextureMode();
 
                     // Apply shaders to low res texture
                     var virtualRenderTargetPp = _virtualPostProcessor.Apply(_virtualRenderTarget.Texture);
 
                     // Scale virtual res texture up
-                    Graphics.BeginTextureMode(_renderTarget);
+                    Raylib.BeginTextureMode(_renderTarget);
                     BlitToScreen(virtualRenderTargetPp);
-                    Graphics.EndTextureMode();
+                    Raylib.EndTextureMode();
 
                     // Apply shaders to full res texture
                     var renderTargetPp = _postProcessor.Apply(_renderTarget.Texture);
 
-                    Graphics.BeginDrawing();
-                    Graphics.ClearBackground(Color.Black);
-                    Graphics.DrawTexturePro(
+                    Raylib.BeginDrawing();
+                    Raylib.ClearBackground(Color.Black);
+                    Raylib.DrawTexturePro(
                         renderTargetPp,
-                        new Rectangle(0, 0, Window.GetScreenWidth(), -Window.GetScreenHeight()),
-                        new Rectangle(0, 0, Window.GetScreenWidth(), Window.GetScreenHeight()),
+                        new Rectangle(0, 0, Raylib.GetScreenWidth(), -Raylib.GetScreenHeight()),
+                        new Rectangle(0, 0, Raylib.GetScreenWidth(), Raylib.GetScreenHeight()),
                         Vector2.Zero,
                         0.0f,
                         Color.White
                     );
                     BeforeDrawEnd();
-                    Graphics.EndDrawing();
+                    Raylib.EndDrawing();
 
-                    var drawEnd = Time.GetTime();
+                    var drawEnd = Raylib.GetTime();
                     DrawTimeMs = (drawEnd - drawStart) * 1000;
                 }
                 catch (Exception e)
@@ -161,25 +157,25 @@ public abstract class Application
         finally
         {
             OnExit();
-            Window.Close();
+            Raylib.CloseWindow();
         }
     }
 
     private void OnWindowResized()
     {
-        _renderTarget.Unload();
-        _renderTarget = RenderTexture2D.Load(Window.GetScreenWidth(), Window.GetScreenHeight());
-        _renderTarget.Texture.SetFilter(TextureFilter.Bilinear);
+        Raylib.UnloadRenderTexture(_renderTarget);
+        _renderTarget = Raylib.LoadRenderTexture(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
+        Raylib.SetTextureFilter(_renderTarget.Texture, TextureFilter.Bilinear);
 
         _postProcessor.Dispose();
-        _postProcessor = new PostProcessor(Window.GetScreenWidth(), Window.GetScreenHeight(), GetShaders(), TextureFilter.Bilinear);
+        _postProcessor = new PostProcessor(Raylib.GetScreenWidth(), Raylib.GetScreenHeight(), GetShaders(), TextureFilter.Bilinear);
     }
 
     private void BlitToScreen(Texture2D finalTexture)
     {
-        Graphics.ClearBackground(Color.Black);
+        Raylib.ClearBackground(Color.Black);
         Rectangle source = new(0, 0, VirtualViewport.Width, -VirtualViewport.Height);
 
-        Graphics.DrawTexturePro(finalTexture, source, VirtualViewport.Destination, Vector2.Zero, 0.0f, Color.White);
+        Raylib.DrawTexturePro(finalTexture, source, VirtualViewport.Destination, Vector2.Zero, 0.0f, Color.White);
     }
 }

@@ -2,7 +2,8 @@
 using Engine;
 using Engine.Components;
 using Game.Components;
-using Raylib_CSharp.Colors;
+
+using Raylib_cs;
 
 namespace Game.Scenes;
 

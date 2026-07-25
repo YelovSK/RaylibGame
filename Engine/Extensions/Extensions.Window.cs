@@ -1,33 +1,34 @@
-﻿using Raylib_CSharp.Windowing;
+
+using Raylib_cs;
 
 namespace Engine.Extensions;
 
 public static class ExtensionsWindow
 {
-    extension(Window)
+    extension(Raylib)
     {
         public static void SetBorderless()
         {
-            Window.SetState(ConfigFlags.UndecoratedWindow | ConfigFlags.TopmostWindow);
+            Raylib.SetWindowState(ConfigFlags.UndecoratedWindow | ConfigFlags.TopmostWindow);
             
-            var monitor = Window.GetCurrentMonitor();
-            var width = Window.GetMonitorWidth(monitor);
-            var height = Window.GetMonitorHeight(monitor);
+            var monitor = Raylib.GetCurrentMonitor();
+            var width = Raylib.GetMonitorWidth(monitor);
+            var height = Raylib.GetMonitorHeight(monitor);
                     
-            Window.SetSize(width, height);
-            Window.SetPosition(0, 0);
+            Raylib.SetWindowSize(width, height);
+            Raylib.SetWindowPosition(0, 0);
         }
         
         public static void UnsetBorderless()
         {
-            var monitor = Window.GetCurrentMonitor();
-            var width = Window.GetMonitorWidth(monitor);
-            var height = Window.GetMonitorHeight(monitor);
+            var monitor = Raylib.GetCurrentMonitor();
+            var width = Raylib.GetMonitorWidth(monitor);
+            var height = Raylib.GetMonitorHeight(monitor);
             
-            Window.SetSize(width / 2, height / 2);
-            Window.SetPosition(width / 2, height / 2);
-                    
-            Window.ClearState(ConfigFlags.UndecoratedWindow | ConfigFlags.TopmostWindow); 
+            Raylib.SetWindowSize(width / 2, height / 2);
+            Raylib.SetWindowPosition(width / 2, height / 2);
+
+            Raylib.ClearWindowState(ConfigFlags.UndecoratedWindow | ConfigFlags.TopmostWindow);
         }
     }
 }

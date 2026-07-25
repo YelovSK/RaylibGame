@@ -1,7 +1,8 @@
 ﻿using Engine.Collections;
 using Engine.Components;
 using Engine.Enums;
-using Raylib_CSharp.Rendering;
+
+using Raylib_cs;
 
 namespace Engine;
 
@@ -137,7 +138,7 @@ public abstract class Scene
     {
         if (Camera != null)
         {
-            Graphics.BeginMode2D(Camera.Camera);
+            Raylib.BeginMode2D(Camera.Camera);
         }
         
         foreach (var draw in _drawables)
@@ -150,7 +151,7 @@ public abstract class Scene
         
         if (Camera != null)
         {
-            Graphics.EndMode2D();
+            Raylib.EndMode2D();
         }
     }
 

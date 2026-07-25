@@ -1,4 +1,5 @@
-using Raylib_CSharp.Camera.Cam2D;
+
+using Raylib_cs;
 
 namespace Engine.Components;
 

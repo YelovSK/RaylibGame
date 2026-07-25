@@ -1,4 +1,5 @@
-﻿using Raylib_CSharp.Textures;
+
+using Raylib_cs;
 
 namespace Engine.PostProcessing;
 
@@ -10,16 +11,16 @@ public class PostProcessor : IDisposable
 
     public PostProcessor(int width, int height)
     {
-        _bufferA = RenderTexture2D.Load(width, height);
-        _bufferB = RenderTexture2D.Load(width, height);
+        _bufferA = Raylib.LoadRenderTexture(width, height);
+        _bufferB = Raylib.LoadRenderTexture(width, height);
     }
     
     public PostProcessor(int width, int height, IEnumerable<IPostProcessPass> passes, TextureFilter textureFilter) : this(width, height)
     {
         _passes = passes.ToList();
         
-        _bufferA.Texture.SetFilter(textureFilter);
-        _bufferB.Texture.SetFilter(textureFilter);
+        Raylib.SetTextureFilter(_bufferA.Texture, textureFilter);
+        Raylib.SetTextureFilter(_bufferB.Texture, textureFilter);
     }
 
     public void AddPass(IPostProcessPass pass)
@@ -51,7 +52,7 @@ public class PostProcessor : IDisposable
     
     public void Dispose()
     {
-        _bufferA.Unload();
-        _bufferB.Unload();
+        Raylib.UnloadRenderTexture(_bufferA);
+        Raylib.UnloadRenderTexture(_bufferB);
     }
 }
