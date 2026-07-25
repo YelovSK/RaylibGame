@@ -1,19 +1,15 @@
 using System.Numerics;
-using Engine.Enums;
 using Engine.Extensions;
 using Raylib_CSharp;
 using Raylib_CSharp.Colors;
 using Raylib_CSharp.Fonts;
-using Raylib_CSharp.Interact;
 using Raylib_CSharp.Rendering;
 using Raylib_CSharp.Transformations;
 
 namespace Engine.Components;
 
-public class ButtonComponent : Component, IUpdatable, IDrawable
+public class ButtonComponent : UiControlComponent
 {
-    public RenderSpace RenderSpace { get; set; } = RenderSpace.Screen;
-    
     public string Text;
     public int FontSize = 20;
     public float StrokeWidth = 2f;
@@ -21,49 +17,35 @@ public class ButtonComponent : Component, IUpdatable, IDrawable
     public Color HoverColor = Color.Gray;
     public Color PressedColor = Color.LightGray;
     public Color TextColor = Color.White;
-    
+
     public Action? OnClick;
 
     private float _currentTiltX;
     private float _currentTiltY;
-    
+
     private const float MAX_TILT_DEGREES = 15f;
     private const float TILT_SPEED = 10f;
     private const float FOV = 100f;
 
-    private GuiInteractableComponent? _guiInteractableComponent;
-    private RectTransform? _rectTransform;
-
-    public override void Start()
+    protected override void UpdateControl(float dt, Vector2 mousePosition)
     {
-        _guiInteractableComponent = GetComponent<GuiInteractableComponent>();
-        _rectTransform = GetComponent<RectTransform>();
+        HandleTilt(dt, Rect.Bounds, mousePosition);
     }
 
-    public void Update(float dt)
+    protected override void Click()
     {
-        if (_rectTransform is null || _guiInteractableComponent is null)
-        {
-            return;
-        }
-        
-        HandleTilt(dt, _rectTransform.Bounds, Input.GetVirtualMousePosition());
-
-        if (_guiInteractableComponent.IsClicked)
-        {
-            OnClick?.Invoke();
-        }
+        OnClick?.Invoke();
     }
 
-    private void HandleTilt(float dt, Rectangle bounds, Vector2 mousePos)
+    private void HandleTilt(float dt, Rectangle bounds, Vector2 mousePosition)
     {
         var center = bounds.Center();
-        var offset = center - mousePos;
+        var offset = center - mousePosition;
 
         float targetTiltX;
         float targetTiltY;
-        
-        if (!_guiInteractableComponent?.IsHovered ?? false)
+
+        if (!IsHovered)
         {
             targetTiltX = 0;
             targetTiltY = 0;
@@ -72,60 +54,44 @@ public class ButtonComponent : Component, IUpdatable, IDrawable
         {
             var normalizedX = Math.Clamp(offset.X / (bounds.Width / 2), -1f, 1f);
             var normalizedY = Math.Clamp(offset.Y / (bounds.Height / 2), -1f, 1f);
-        
+
             targetTiltX = -normalizedY * MAX_TILT_DEGREES;
             targetTiltY = normalizedX * MAX_TILT_DEGREES;
         }
-        
+
         _currentTiltX = RayMath.Lerp(_currentTiltX, targetTiltX, TILT_SPEED * dt);
         _currentTiltY = RayMath.Lerp(_currentTiltY, targetTiltY, TILT_SPEED * dt);
     }
-    
-    public void Draw()
-    {
-        if (_rectTransform is null)
-        {
-            return;
-        }
 
-        var bounds = _rectTransform.Bounds;
-        var color = _guiInteractableComponent?.State switch
+    public override void Draw()
+    {
+        var bounds = Rect.Bounds;
+        var color = State switch
         {
             InteractableState.Normal => NormalColor,
-            InteractableState.Hoverered => HoverColor,
+            InteractableState.Hovered => HoverColor,
             InteractableState.Pressed => PressedColor,
             _ => NormalColor,
         };
-        
-        // Tilt the button in 3D space and project it into 2D
+
         Span<Vector3> corners =
         [
-            new(-bounds.Width/2, -bounds.Height/2, 0),
-            new( bounds.Width/2, -bounds.Height/2, 0),
-            new(-bounds.Width/2,  bounds.Height/2, 0),
-            new( bounds.Width/2,  bounds.Height/2, 0),
+            new(-bounds.Width / 2, -bounds.Height / 2, 0),
+            new( bounds.Width / 2, -bounds.Height / 2, 0),
+            new(-bounds.Width / 2,  bounds.Height / 2, 0),
+            new( bounds.Width / 2,  bounds.Height / 2, 0),
         ];
-        
+
         var tiltXRad = _currentTiltX * RayMath.Deg2Rad;
         var tiltYRad = _currentTiltY * RayMath.Deg2Rad;
-        
+
         for (var i = 0; i < corners.Length; i++)
         {
-            corners[i] = RayMath.Vector3RotateByAxisAngle(
-                corners[i], 
-                new Vector3(1, 0, 0),
-                tiltXRad
-            );
-            corners[i] = RayMath.Vector3RotateByAxisAngle(
-                corners[i], 
-                new Vector3(0, 1, 0),
-                tiltYRad
-            );
+            corners[i] = RayMath.Vector3RotateByAxisAngle(corners[i], Vector3.UnitX, tiltXRad);
+            corners[i] = RayMath.Vector3RotateByAxisAngle(corners[i], Vector3.UnitY, tiltYRad);
         }
 
         var center = bounds.Center();
-        
-        // TODO: i think this could be a helper
         Span<Vector2> projected = stackalloc Vector2[4];
         for (var i = 0; i < corners.Length; i++)
         {
@@ -135,28 +101,24 @@ public class ButtonComponent : Component, IUpdatable, IDrawable
                 center.Y + corners[i].Y * scale
             );
         }
-        
-        // Background
-        Graphics.DrawQuad(projected[0], projected[1], projected[2], projected[3], color);
-        
-        // Outline
-        Span<Vector2> outlinesPoints = [ projected[0], projected[1], projected[3], projected[2], projected[0] ];
-        Graphics.DrawSplineLinear(outlinesPoints, StrokeWidth, Color.Black);
 
-        // Text
+        Graphics.DrawQuad(projected[0], projected[1], projected[2], projected[3], color);
+
+        Span<Vector2> outline = [projected[0], projected[1], projected[3], projected[2], projected[0]];
+        Graphics.DrawSplineLinear(outline, StrokeWidth, Color.Black);
+
         var textSize = TextManager.MeasureText(Text, FontSize);
-        var textPos = new Vector2(
+        var textPosition = new Vector2(
             bounds.X + (bounds.Width - textSize) / 2,
             bounds.Y + (bounds.Height - FontSize) / 2
         );
 
-        // Bounce on it crazy style
-        if (_guiInteractableComponent?.IsHovered ?? false)
+        if (IsHovered)
         {
             var sin = Math.Sin(2 * Math.PI * Time.GetTime());
-            textPos.Y += (float)(sin * Application.Instance.VirtualHeight * 0.01f);
+            textPosition.Y += (float)(sin * Application.Instance.VirtualHeight * 0.01f);
         }
-        
-        Graphics.DrawText(Text, (int)textPos.X, (int)textPos.Y, FontSize, TextColor);
+
+        Graphics.DrawText(Text, (int)textPosition.X, (int)textPosition.Y, FontSize, TextColor);
     }
 }

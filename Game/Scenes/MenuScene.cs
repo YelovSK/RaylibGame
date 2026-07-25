@@ -44,16 +44,13 @@ public class MenuScene : Scene
     private ButtonComponent AddButton(string text, float yOffset)
     {
         var buttonObject = CreateEntity();
-        buttonObject.AddComponent<GuiInteractableComponent>();
         var button = buttonObject.AddComponent<ButtonComponent>();
         button.Text = text;
         button.FontSize = (int)(0.04f * Application.Instance.VirtualWidth);
-
-        var transform = buttonObject.AddComponent<RectTransform>();
-        transform.Anchor = new Vector2(0.5f);
-        transform.Pivot = new Vector2(0.5f);
-        transform.Offset = new Vector2(0, yOffset);
-        transform.Size = new Vector2(BUTTON_WIDTH, BUTTON_HEIGHT);
+        button.Rect.Anchor = new Vector2(0.5f);
+        button.Rect.Pivot = new Vector2(0.5f);
+        button.Rect.Offset = new Vector2(0, yOffset);
+        button.Rect.Size = new Vector2(BUTTON_WIDTH, BUTTON_HEIGHT);
         
         return button;
     }

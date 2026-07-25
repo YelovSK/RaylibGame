@@ -4,7 +4,7 @@ using System.Numerics;
 
 namespace Engine.Components;
 
-public class RectTransform : Component
+public class RectTransform
 {
     public Vector2 Anchor;
     public Vector2 Pivot;

@@ -70,18 +70,15 @@ public class OptionsScene : Scene
         var textComponent = textGo.AddComponent<TextComponent>();
         textComponent.Text = text;
         var textSize = textComponent.TextSize();
-        var textRect = textGo.AddComponent<RectTransform>();
-        textRect.Anchor = new Vector2(0.5f);
-        textRect.Offset = offset - Vector2.X(textSize + SETTING_HEIGHT * 0.7f);
-        textRect.Size = new Vector2(textSize, SETTING_HEIGHT);
+        textComponent.Rect.Anchor = new Vector2(0.5f);
+        textComponent.Rect.Offset = offset - Vector2.X(textSize + SETTING_HEIGHT * 0.7f);
+        textComponent.Rect.Size = new Vector2(textSize, SETTING_HEIGHT);
 
         var go = CreateEntity();
-        go.AddComponent<GuiInteractableComponent>();
-        var rectTransform = go.AddComponent<RectTransform>();
-        rectTransform.Anchor = new Vector2(0.5f);
-        rectTransform.Offset = offset;
-        rectTransform.Size = new Vector2(SETTING_HEIGHT);
         var checkbox = go.AddComponent<CheckboxComponent>();
+        checkbox.Rect.Anchor = new Vector2(0.5f);
+        checkbox.Rect.Offset = offset;
+        checkbox.Rect.Size = new Vector2(SETTING_HEIGHT);
         checkbox.IsChecked = defaultValue;
         checkbox.OnClick = setter;
         
