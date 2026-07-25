@@ -1,27 +1,17 @@
-using Raylib_CSharp.Colors;
-using Raylib_CSharp.Rendering;
+using System.Numerics;
 using Raylib_CSharp.Transformations;
 
 namespace Engine.Components;
 
-public class BoxColliderComponent : Component, IUpdatable
+public class BoxColliderComponent : Component
 {
-    public Rectangle Bounds;
+    public Vector2 Offset;
+    public Vector2 Size;
 
-    public void Update(float dt)
-    {
-        // Keep bounds in sync with position
-        Bounds.X = Entity.Transform.Position.X;
-        Bounds.Y = Entity.Transform.Position.Y;
-    }
-
-    #if DEBUG
-    public void Draw()
-    {
-        return;
-        var color = Color.Red;
-        
-        Graphics.DrawRectangleLines((int)Bounds.X, (int)Bounds.Y, (int)Bounds.Width, (int)Bounds.Height, color);
-    }
-    #endif
+    public Rectangle Bounds => new(
+        Entity.Transform.Position.X + Offset.X,
+        Entity.Transform.Position.Y + Offset.Y,
+        Size.X,
+        Size.Y
+    );
 }
