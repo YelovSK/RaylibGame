@@ -40,7 +40,7 @@ public class Game() : Application(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, TITLE)
         Input.SetExitKey(KeyboardKey.Null);
 
         //SceneManager.Instance.Push(new PerformanceTestScene());
-        SceneManager.Instance.Push(new MenuScene());
+        SceneManager.Instance.Push(new MenuScene(Close));
     }
 
     protected override void BeforeDrawEnd()

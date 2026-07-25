@@ -35,12 +35,12 @@ public class GameScene : Scene
         playerSprite.Color = Color.White;
 
         // Create ground
-        CreatePlatform(10, Application.Instance.VirtualHeight - 20, 600, 10);
+        CreatePlatform(10, VirtualViewport.Height - 20, 600, 10);
 
         // Platforms
-        CreatePlatform(10, Application.Instance.VirtualHeight - 80, 200, 10);
-        CreatePlatform(100, Application.Instance.VirtualHeight - 250, 200, 10);
-        CreatePlatform(200, Application.Instance.VirtualHeight - 160, 200, 10);
+        CreatePlatform(10, VirtualViewport.Height - 80, 200, 10);
+        CreatePlatform(100, VirtualViewport.Height - 250, 200, 10);
+        CreatePlatform(200, VirtualViewport.Height - 160, 200, 10);
 
         var camera = CreateEntity().AddComponent<CameraComponent>();
         camera.Target = _player;

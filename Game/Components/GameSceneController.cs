@@ -10,7 +10,7 @@ public class GameSceneController : Component, IUpdatable
     {
         if (Input.IsKeyPressed(KeyboardKey.Escape))
         {
-            SceneManager.Instance.Push(new MenuScene());
+            SceneManager.Instance.Pop();
         }
         
         if (Input.IsKeyPressed(KeyboardKey.R))

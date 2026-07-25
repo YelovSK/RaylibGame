@@ -13,7 +13,7 @@ public class PlayerController : Component, IFixedUpdatable
 {
     // Helper cheats
     public const float COTOYE_TIME = 0.2f;
-    public readonly float CEILING_BUMP_MAX_PX = Application.Instance.VirtualWidth * 0.01f;
+    public readonly float CEILING_BUMP_MAX_PX = VirtualViewport.Width * 0.01f;
     public const float JUMP_BUFFER_TIME = 0.1f;
 
     public const float MAX_HORIZONTAL_SPEED = 300f;

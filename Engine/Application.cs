@@ -11,39 +11,26 @@ namespace Engine;
 
 public abstract class Application
 {
-    // To explain, the issue is that I want the game itself to define
-    // the virtual resolution, but I still need to have access to the virtual resolution
-    // in the engine project, e.g. for getting the virtual mouse coordinates in components.
-    /// <summary>
-    /// Will be null if an instance wasn't created with the constructor.
-    /// </summary>
-    public static Application Instance { get; private set; }
+    public string Title { get; private set; }
 
-    public int VirtualWidth { get; private set; }
-    public int VirtualHeight  { get; private set; }
-    public string Title  { get; private set; }
-    
     /// <summary>
     /// Exits cleanly after finishing the current frame, cleanup etc.
     /// </summary>
     public void Close() => _closeRequested = true;
     private bool _closeRequested;
-    
-    public double UpdateTimeMs  { get; private set; }
-    public double DrawTimeMs  { get; private set; }
-    
+
+    public double UpdateTimeMs { get; private set; }
+    public double DrawTimeMs { get; private set; }
+
     private RenderTexture2D _virtualRenderTarget;
     private RenderTexture2D _renderTarget;
-    
+
     private PostProcessor _virtualPostProcessor;
     private PostProcessor _postProcessor;
 
     protected Application(int virtualWidth, int virtualHeight, string title)
     {
-        Instance = this;
-        
-        VirtualWidth = virtualWidth;
-        VirtualHeight = virtualHeight;
+        VirtualViewport.Initialize(virtualWidth, virtualHeight);
         Title = title;
     }
 
@@ -75,24 +62,31 @@ public abstract class Application
 
     public void Run()
     {
+        _closeRequested = false;
+
         AppDomain.CurrentDomain.ProcessExit += (_, _) =>
         {
             OnExit();
-        }; 
-        
+        };
+
         BeforeWindowInit();
 
         Window.Init(Window.GetScreenWidth(), Window.GetScreenHeight(), Title);
-        
-        _virtualRenderTarget  = RenderTexture2D.Load(VirtualWidth, VirtualHeight);
+
+        _virtualRenderTarget = RenderTexture2D.Load(VirtualViewport.Width, VirtualViewport.Height);
         _virtualRenderTarget.Texture.SetFilter(TextureFilter.Point);
-        
+
         _renderTarget = RenderTexture2D.Load(Window.GetScreenWidth(), Window.GetScreenHeight());
         _renderTarget.Texture.SetFilter(TextureFilter.Bilinear);
-        
-        _virtualPostProcessor = new PostProcessor(VirtualWidth, VirtualHeight, GetVirtualShaders(), TextureFilter.Point);
+
+        _virtualPostProcessor = new PostProcessor(
+            VirtualViewport.Width,
+            VirtualViewport.Height,
+            GetVirtualShaders(),
+            TextureFilter.Point
+        );
         _postProcessor = new PostProcessor(Window.GetScreenWidth(), Window.GetScreenHeight(), GetShaders(), TextureFilter.Bilinear);
-        
+
         AfterWindowInit();
 
         double accumulator = 0;
@@ -104,14 +98,14 @@ public abstract class Application
                 {
                     OnWindowResized();
                 }
-                
+
                 var dt = Time.GetFrameTime();
 
                 // Update
                 var updateStart = Time.GetTime();
                 InputManager.Instance.Gather();
                 Update(dt);
-                
+
                 // Fixed update
                 accumulator += dt;
                 while (accumulator >= FixedTime.TICK_RATE)
@@ -122,10 +116,10 @@ public abstract class Application
                 }
 
                 SceneManager.Instance.EndFrame();
-                
+
                 var updateEnd = Time.GetTime();
                 var alpha = (float)(accumulator / FixedTime.TICK_RATE);
-                
+
                 UpdateTimeMs = (updateEnd - updateStart) * 1000;
 
                 // Draw in virtual resolution
@@ -136,15 +130,15 @@ public abstract class Application
 
                 // Apply shaders to low res texture
                 var virtualRenderTargetPp = _virtualPostProcessor.Apply(_virtualRenderTarget.Texture);
-                
+
                 // Scale virtual res texture up
                 Graphics.BeginTextureMode(_renderTarget);
                 BlitToScreen(virtualRenderTargetPp);
                 Graphics.EndTextureMode();
-                
+
                 // Apply shaders to full res texture
-                var renderTargetPp = _postProcessor.Apply(_renderTarget.Texture); 
-                
+                var renderTargetPp = _postProcessor.Apply(_renderTarget.Texture);
+
                 Graphics.BeginDrawing();
                 Graphics.ClearBackground(Color.Black);
                 Graphics.DrawTexturePro(
@@ -156,10 +150,10 @@ public abstract class Application
                     Color.White
                 );
                 BeforeDrawEnd();
-                Graphics.EndDrawing(); 
+                Graphics.EndDrawing();
 
                 // Scale up
-                var drawEnd  = Time.GetTime();
+                var drawEnd = Time.GetTime();
                 DrawTimeMs = (drawEnd - drawStart) * 1000;
             }
             catch (Exception e)
@@ -167,7 +161,7 @@ public abstract class Application
                 if (OnException(e)) throw;
             }
         }
-        
+
         // Cleanup
         _renderTarget.Unload();
         _virtualRenderTarget.Unload();
@@ -179,15 +173,15 @@ public abstract class Application
         _renderTarget.Unload();
         _renderTarget = RenderTexture2D.Load(Window.GetScreenWidth(), Window.GetScreenHeight());
         _renderTarget.Texture.SetFilter(TextureFilter.Bilinear);
-        
+
         _postProcessor.Dispose();
         _postProcessor = new PostProcessor(Window.GetScreenWidth(), Window.GetScreenHeight(), GetShaders(), TextureFilter.Bilinear);
     }
-    
+
     private void BlitToScreen(Texture2D finalTexture)
     {
         Graphics.ClearBackground(Color.Black);
-        Rectangle source = new(0, 0, VirtualWidth, -VirtualHeight);
+        Rectangle source = new(0, 0, VirtualViewport.Width, -VirtualViewport.Height);
 
         Graphics.DrawTexturePro(finalTexture, source, VirtualViewport.Destination, Vector2.Zero, 0.0f, Color.White);
     }

@@ -13,7 +13,7 @@ namespace Game.Scenes;
 
 public class OptionsScene : Scene
 {
-    private readonly float SETTING_HEIGHT = Application.Instance.VirtualHeight * 0.05f;
+    private readonly float SETTING_HEIGHT = VirtualViewport.Height * 0.05f;
     private float SETTING_OFFSET => SETTING_HEIGHT * 1.5f;
 
     private int _settingsCount;
@@ -24,8 +24,8 @@ public class OptionsScene : Scene
         
         var background = CreateEntity();
         var backgroundSprite = background.AddComponent<SpriteComponent>();
-        backgroundSprite.Width = Application.Instance.VirtualWidth;
-        backgroundSprite.Height = Application.Instance.VirtualHeight;
+        backgroundSprite.Width = VirtualViewport.Width;
+        backgroundSprite.Height = VirtualViewport.Height;
         backgroundSprite.Color = Color.SkyBlue;
         
         // Vsync

@@ -116,7 +116,7 @@ public class ButtonComponent : UiControlComponent
         if (IsHovered)
         {
             var sin = Math.Sin(2 * Math.PI * Time.GetTime());
-            textPosition.Y += (float)(sin * Application.Instance.VirtualHeight * 0.01f);
+            textPosition.Y += (float)(sin * VirtualViewport.Height * 0.01f);
         }
 
         Graphics.DrawText(Text, (int)textPosition.X, (int)textPosition.Y, FontSize, TextColor);
